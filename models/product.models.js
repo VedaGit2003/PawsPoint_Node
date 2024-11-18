@@ -26,6 +26,11 @@ const porductSchema = new mongoose.Schema({
             validator: validator.isURL,
             message: (props) => `${props.value} is not a valid URL`
         }
+    },
+    seller_Info: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: true
     }
 
 },{
