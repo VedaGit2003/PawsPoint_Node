@@ -31,20 +31,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: [] //<- needs to add the properties of the enum
+      enum: [], //<- needs to add the properties of the enum
     },
     profile_Image: {
       type: String,
       validate: {
         validator: validator.isURL,
-        message: (props) => `${props.value} is not a valid URL`
-      }
-    }
-    ,
+        message: (props) => `${props.value} is not a valid URL`,
+      },
+    },
     vet_Type: {
       type: String,
       trim: true,
-      enum: [] // <- needs to add the properties of the enum
+      enum: [], // <- needs to add the properties of the enum
     },
     vet_Description: {
       type: String,
@@ -54,6 +53,12 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    order: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: "Order",
+      },
+    ],
   },
   {
     timestamps: {
