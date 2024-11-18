@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: [], //<- needs to add the properties of the enum
+      enum: ["consumer", "seler", "vet"], //<- needs to add the properties of the enum
     },
     profile_Image: {
       type: String,
@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
     vet_Type: {
       type: String,
       trim: true,
-      enum: [], // <- needs to add the properties of the enum
+      //enum: [], // <- needs to add the properties of the enum
     },
     vet_Description: {
       type: String,
