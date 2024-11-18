@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// need some improvements in this schema
 const appointmentSchema = new mongoose.Schema(
   {
     // appointment date, description, status, vet_Info, client_Info
