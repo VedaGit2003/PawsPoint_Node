@@ -2,17 +2,28 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    // reference to the user, array of products, status of product delivery, total_billing
+    // reference to the user (customer), array of products, status of product delivery, total_billing
     user: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: true,
     },
-    products: [
+    seller: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    cart: [
       {
-        product: {
+        itemType: {
+          type: String,
+          enum: ["Product", "Pet"],
+          required: true,
+        },
+        item: {
           type: mongoose.Schema.ObjectId,
-          ref: "Product",
+          required: true,
+          refPath: "cart.itemType", // Dynamically resolves the reference based on itemType
         },
         quantity: {
           type: Number,
@@ -23,10 +34,7 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Pending", "Confirmed", "Cancelled", "Rejected", "Delivered"],
-    },
-    total_Bill: {
-      type: Number,
-      required: true,
+      default: "Pending",
     },
     shipping_Address: {
       street: {
@@ -54,10 +62,86 @@ const orderSchema = new mongoose.Schema(
         required: [true, "Please enter the country"],
       },
     },
-    payment_Status: {
+    billing_Address: {
+      street: {
+        type: String,
+        required: [true, "Please enter the street name"],
+      },
+      building_No: {
+        type: Number,
+        required: [true, "Please enter the building number"],
+      },
+      city: {
+        type: String,
+        required: [true, "Please enter the city name"],
+      },
+      pincode: {
+        type: Number,
+        required: [true, "Please enter the pincode"],
+      },
+      state: {
+        type: String,
+        required: [true, "Please enter the state"],
+      },
+      country: {
+        type: String,
+        required: [true, "Please enter the country"],
+      },
+    },
+    // order_Time, shipment_Time, delivery_Time, cancellation_Time, approx_Delivery_Time, max_Delivery_Time
+    order_Time: {
+      type: Date,
+      default: Date.now,
+    },
+    // all of these will be provided via seller
+    shipment_Time: {
+      type: Date,
+    },
+    delivery_Time: {
+      type: Date,
+    },
+    cancellation_Time: {
+      type: Date,
+    },
+    approx_Delivery_Time: {
+      type: Date,
+    },
+    max_Delivery_Time: {
+      type: Date,
+    },
+    // otp, orders_Confirmed, orders_Completed, orders_Cancelled, price, delivery_Cost, total_Order_Value, cancellation_Fees
+    otp: {
       type: String,
-      enum: ["Failed", "Successfull", "Processing", "Refund"],
-      default: "None",
+      default: null,
+    },
+    orders_Confirmed: {
+      type: Boolean,
+      default: false,
+    },
+    orders_Completed: {
+      type: Boolean,
+      default: false,
+    },
+    orders_Cancelled: {
+      type: Boolean,
+      default: false,
+    },
+    price: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    delivery_Cost: {
+      type: Number,
+      default: 0,
+    },
+    total_Order_Value: {
+      type: Number,
+      default: 0,
+    },
+    cancellation_Fees: {
+      type: Number,
+      default: 0,
     },
   },
   {
