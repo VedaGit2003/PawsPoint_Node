@@ -19,11 +19,17 @@ const porductSchema = new mongoose.Schema({
         type: String,
         required: [true, "Please enter the description of your product"]
     },
-    productImage: {
+    category: {
         type: String,
-        required: [true, "Please provide the image of your product"],
+        required: [true, "Please provide the category of your product"]
+    },
+    productImages: {
+        type: [String],
+        required: [true, "Please provide the images of your product"],
         validate: {
-            validator: validator.isURL,
+            validator: (value) => { 
+                return value.every(url => validator.isURL(url))
+             },
             message: (props) => `${props.value} is not a valid URL`
         }
     },
