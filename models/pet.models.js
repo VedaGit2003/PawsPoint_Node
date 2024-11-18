@@ -32,7 +32,8 @@ const petSchema = new mongoose.Schema({
         default: 1
     },
     price: {
-        type: Number
+        type: Number,
+        required: true,
     },
     seller_Info: {
         type: mongoose.Schema.ObjectId,
