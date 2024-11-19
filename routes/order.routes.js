@@ -49,7 +49,7 @@ router
 
 router
 .route("/u/orders/canceled")
-get(isLoggedIn, getCanceledOrderUsers);
+.get(isLoggedIn, getCanceledOrderUsers);
 
 // getting orders (confirmed, confirmed) based on seller_id
 router
