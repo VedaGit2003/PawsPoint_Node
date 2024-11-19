@@ -18,7 +18,7 @@ router
 .post(isLoggedIn, createPets);
 
 router
-.route("/u/:user_id")
+.route("/p/:pet_id")
 .get(getPet)
 .put(isLoggedIn, updatePet)
 .delete(isLoggedIn, deletePet);
