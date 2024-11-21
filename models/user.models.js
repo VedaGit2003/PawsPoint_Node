@@ -3,11 +3,10 @@ import validator from "validator";
 
 const userSchema = new mongoose.Schema(
   {
-    username: {
+    user_Name: {
       type: String,
       trim: true,
       lowercase: true,
-      unique: true,
       required: [true, "username is required"],
       minLength: [3, "username should be atleast 3 characters long"],
     },
@@ -31,7 +30,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      enum: ["consumer", "seler", "vet"], //<- needs to add the properties of the enum
+      enum: ["consumer", "seller", "vet", "admin"], //<- needs to add the properties of the enum
     },
     profile_Image: {
       type: String,
@@ -43,17 +42,12 @@ const userSchema = new mongoose.Schema(
     vet_Type: {
       type: String,
       trim: true,
-      //enum: [], // <- needs to add the properties of the enum
     },
     vet_Description: {
       type: String,
       trim: true,
     },
-    numberOfAppointments: {
-      type: Number,
-      default: 0,
-    },
-    order: [
+    orders: [
       {
         type: mongoose.Schema.ObjectId,
         ref: "Order",
@@ -67,6 +61,6 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
-
+ 
 const userModel = mongoose.model("User", userSchema);
 export default userModel;
