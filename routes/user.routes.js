@@ -2,24 +2,36 @@ import { Router } from "express";
 import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 import {
   signUpUser,
+  signUpVet,
+  signUpSeller,
   loginUser,
   logoutUser,
-  getUserId,
+  // getUser,
+  // getUserId,
   updateUserId,
-  refreshAccessToken,
+  // refreshAccessToken,
 } from "../controllers/user.controllers.js";
 
 const router = Router();
 
-router.route("/sign-up").post(signUpUser);
+router.route("/auth/sign-up/").post(signUpUser);
+router.route("/auth/vet/sign-up/").post(signUpVet);
+router.route("/auth/seller/sign-up/").post(signUpSeller);
+
 router.route("/login").post(loginUser);
 router.route("/logout").post(isLoggedIn, logoutUser);
 
-// getting user by id
+/**  
+will be considering it at a later point of time
+
+router.route("/u/:user_Name").get(getUser);
 router.route("/u/:user_id").get(getUserId);
+router.route("/token/refresh").post(refreshAccessToken);
+
+**/
+
 // updating the user by id
 router.route("/update/:user_id").put(isLoggedIn, updateUserId);
-// refresh access token
-router.route("/token/refresh").post(refreshAccessToken);
+
 
 export default router;
