@@ -3,6 +3,7 @@ import validator from "validator";
 
 const porductSchema = new mongoose.Schema({
     // name, category, price, description, image
+    // need to add trim in all the cases
     name: {
         type: String,
         required: [true, "Please enter the name of your product"],
