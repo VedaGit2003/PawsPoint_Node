@@ -13,6 +13,7 @@ const getConfirmedOrderUsers = asyncHandler();
 const getCanceledOrderUsers = asyncHandler();
 const getConfirmedOrderSeller = asyncHandler();
 const getCanceledOrderSeller = asyncHandler();
+const gettingItemsNeedingApproval = asyncHandler();
 const handleItems = asyncHandler();
 
 export {
@@ -26,5 +27,6 @@ export {
   getCanceledOrderUsers,
   getConfirmedOrderSeller,
   getCanceledOrderSeller,
+  gettingItemsNeedingApproval,
   handleItems,
 };
