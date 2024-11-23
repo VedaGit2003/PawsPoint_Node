@@ -6,34 +6,41 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/generateToken.js";
 
-const validateFields = (fields) => {
+const validateFields = (fields, req, res) => {
   if (fields.some((field) => field?.trim() === "")) {
-    throw new ApiError(400, "All fields are required");
+    return res.json(
+        new ApiError(400, "All fields are required", "InputError: All fields are required")
+    );
   }
 };
-const validateEmails = (email) => {
+
+const validateEmails = (email, req, res) => {
   if (!validator.isEmail(email)) {
-    throw new ApiError(400, "Email is not valid");
+    return res.json(
+        new ApiError(400, "Email is not valid", "ValidationError: Email validation failed")
+    );
   }
 };
-const validateRoles = (userRole) => {
+
+const validateRoles = (userRole, req, res) => {
   const validRoles = ["consumer", "seller", "vet"];
   if (!validRoles.includes(userRole)) {
-    throw new ApiError(400, "Invalid user role");
+    return res.json(
+        new ApiError(400, "Invalid user role", "ValidationError: Invalid user role")
+    );
   }
 };
 
 const signUpUser = asyncHandler(async (req, res) => {
-  let { user_Name, email, password, user_Role, profile_Image, orders } =
-    req.body;
+  let { user_Name, email, password, user_Role, profile_Image, orders } = req.body;
 
-  validateFields([user_Name, email, password]);
-  validateEmails(email);
+  validateFields([user_Name, email, password], req, res);
+  validateEmails(email, req, res);
 
   // Set user_Role to 'vet' if not provided
   if (user_Role) {
     // Ensure valid userRole
-    validateRoles(user_Role);
+    validateRoles(user_Role, req, res);
   } else {
     user_Role = "consumer";
   }
@@ -41,7 +48,9 @@ const signUpUser = asyncHandler(async (req, res) => {
   const existUser = await userModel.findOne({ email });
 
   if (existUser) {
-    throw new ApiError(400, "User with same email already exist");
+    return res.json(
+        new ApiError(400, "User with same email already exist", "DuplicateError: Email already exists")
+    );
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -58,7 +67,9 @@ const signUpUser = asyncHandler(async (req, res) => {
   });
 
   if (!newUser) {
-    throw new ApiError(500, "Something went wrong while registering the user");
+    return res.json(
+        new ApiError(500, "Something went wrong while registering the user", "NetworkError")
+    );
   }
 
   let token = generateToken(newUser);
@@ -66,55 +77,39 @@ const signUpUser = asyncHandler(async (req, res) => {
 
   const createdUser = await userModel.findById(newUser._id).select("-password");
 
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        { user: createdUser, token },
-        "Consumer Registered Successfully"
-      )
-    );
+  return res.json(
+      new ApiResponse(201, { user: createdUser, token }, "Consumer Registered Successfully")
+  );
 });
 
 const signUpVet = asyncHandler(async (req, res) => {
-  let {
-    user_Name,
-    email,
-    password,
-    vet_Type,
-    vet_Description,
-    profile_Image,
-    user_Role, // Check if user_Role is in the body
-  } = req.body;
+  let { user_Name, email, password, vet_Type, vet_Description, profile_Image, user_Role } = req.body;
 
   // Validate required fields for vet signup
-  validateFields([user_Name, email, password, vet_Type, vet_Description]);
-  validateEmails(email);
+  validateFields([user_Name, email, password, vet_Type, vet_Description], req, res);
+  validateEmails(email, req, res);
 
   // Set user_Role to 'vet' if not provided
   if (user_Role) {
-    // Ensure valid userRole
-    validateRoles(user_Role);
+    validateRoles(user_Role, req, res);
   } else {
     user_Role = "vet";
   }
 
-  // Check if the user already exists
   const userExisted = await userModel.findOne({ email });
   if (userExisted) {
-    throw new ApiError(400, "User with the same email already exists");
+    return res.json(
+        new ApiError(400, "User with the same email already exists", "DuplicateError: Email already exists")
+    );
   }
 
-  // Hash the password before storing it
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Create the new user, explicitly excluding orders for vet
   const newUser = await userModel.create({
     user_Name,
-    user_Role, // Set the role (it's either 'consumer', 'seller', or 'vet')
+    user_Role,
     email,
-    password: hashedPassword, // Store the hashed password
+    password: hashedPassword,
     vet_Type,
     vet_Description,
     profile_Image,
@@ -123,31 +118,21 @@ const signUpVet = asyncHandler(async (req, res) => {
   let token = generateToken(newUser);
   res.cookie("token", token);
 
-  // Find and return the created user, excluding the password
-  const createdUser = await userModel.findById(newUser._id).select("-password"); // Exclude the password field from the response
+  const createdUser = await userModel.findById(newUser._id).select("-password");
 
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        { user: createdUser, token },
-        "Vet created successfully"
-      )
-    );
+  return res.json(
+      new ApiResponse(201, { user: createdUser, token }, "Vet created successfully")
+  );
 });
 
 const signUpSeller = asyncHandler(async (req, res) => {
-  let { user_Name, email, password, user_Role, profile_Image, orders } =
-    req.body;
+  let { user_Name, email, password, user_Role, profile_Image, orders } = req.body;
 
-  validateFields([user_Name, email, password]);
-  validateEmails(email);
+  validateFields([user_Name, email, password], req, res);
+  validateEmails(email, req, res);
 
-  // Set user_Role to 'vet' if not provided
   if (user_Role) {
-    // Ensure valid userRole
-    validateRoles(user_Role);
+    validateRoles(user_Role, req, res);
   } else {
     user_Role = "seller";
   }
@@ -155,7 +140,9 @@ const signUpSeller = asyncHandler(async (req, res) => {
   const existUser = await userModel.findOne({ email });
 
   if (existUser) {
-    throw new ApiError(400, "User with same email already exist");
+    return res.json(
+        new ApiError(400, "User with same email already exists", "DuplicateError: Email already exists")
+    );
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -172,7 +159,9 @@ const signUpSeller = asyncHandler(async (req, res) => {
   });
 
   if (!newUser) {
-    throw new ApiError(500, "Something went wrong while registering the user");
+    return res.json(
+        new ApiError(500, "Something went wrong while registering the user", "NetworkError")
+    );
   }
 
   let token = generateToken(newUser);
@@ -180,50 +169,88 @@ const signUpSeller = asyncHandler(async (req, res) => {
 
   const createdUser = await userModel.findById(newUser._id).select("-password");
 
-  return res
-    .status(201)
-    .json(
-      new ApiResponse(
-        201,
-        { user: createdUser, token },
-        "Seller Registered Successfully"
-      )
-    );
+  return res.json(
+      new ApiResponse(201, { user: createdUser, token }, "Seller Registered Successfully")
+  );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
   let { email, password } = req.body;
 
-  validateFields([email, password]);
-  validateEmails(email);
+  validateFields([email, password], req, res);
+  validateEmails(email, req, res);
 
   const checkUser = await userModel.findOne({ email });
   if (!checkUser) {
-    throw new ApiError(400, "User does not exist");
+    return res.json(
+        new ApiError(400, "User does not exist", "NotFoundError: User does not exist")
+    );
   }
 
   const checkPassword = await bcrypt.compare(password, checkUser.password);
   if (!checkPassword) {
-    throw new ApiError(400, "Incorrect Password!");
+    return res.json(
+        new ApiError(400, "Incorrect Password!", "AuthenticationError: Incorrect Password")
+    );
   }
 
   let token = generateToken(checkUser);
   res.cookie("token", token);
 
-  res
-    .status(201)
-    .json(
-      new ApiResponse(201, { user: checkUser, token }, "Login Successfull")
-    );
+  return res.json(
+      new ApiResponse(200, { user: checkUser, token }, "Login Successful")
+  );
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "");
-  res.status(200).json(new ApiResponse(200, "User logged out successfully"));
+  return res.json(
+      new ApiResponse(200, "User logged out successfully", "Logout Success")
+  );
 });
 
-/** 
-  
+const updateUserId = asyncHandler(async (req, res) => {
+  let id = req.params.user_id;
+  let { user_Name, email, password, profile_Image } = req.body;
+
+  if (!id) {
+    return res.json(
+        new ApiError(404, "Page not found", "NotFoundError")
+    );
+  }
+
+  const checkUser = await userModel.findById({ _id: id }).select("-password");
+  if (!checkUser) {
+    return res.json(
+        new ApiError(400, "User does not exist", "NotFoundError: User does not exist")
+    );
+  }
+
+  let newPassword = password ? await bcrypt.hash(password, 10) : checkUser.password;
+
+  const updatedUser = await userModel.findByIdAndUpdate(id, {
+    user_Name: user_Name || checkUser.user_Name,
+    password: newPassword || checkUser.password,
+    email: email || checkUser.email,
+    profile_Image: profile_Image || checkUser.profile_Image,
+  }).select("-password");
+
+  if (!updatedUser) {
+    return res.json(
+        new ApiError(400, "Something went wrong while updating the user", "NetworkError")
+    );
+  }
+
+  let token = generateToken(updatedUser);
+  res.cookie("token", token);
+
+  return res.json(
+      new ApiResponse(200, updatedUser, "User updated successfully")
+  );
+});
+
+/**
+
 const getUser = asyncHandler(async (req, res) => {
   let { user_Name } = req.params;
   if (!user_Name) {
@@ -250,7 +277,7 @@ const getUserId = asyncHandler(async (req, res) => {
   if(!_id) {
     throw new ApiError(404, "Page not found");
   }
-  
+
   const checkUser = await userModel.findById({ _id }).select(" -password ");
   if(!checkUser) {
     throw new ApiError(400, "User does not exist");
@@ -262,39 +289,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {});
 
 **/
 
-const updateUserId = asyncHandler(async (req, res) => {
-  let id = req.params.user_id;
-  let { user_Name, email, password, profile_Image } = req.body;
-
-  if (!id) {
-    throw new ApiError(404, "Page not found");
-  }
-
-  const checkUser = await userModel.findById({ _id: id }).select(" -password ");
-  if (!checkUser) {
-    throw new ApiError(400, "User does not exist");
-  }
-
-  let newPassword = password
-    ? await bcrypt.hash(password, 10)
-    : checkUser.password;
-
-  const updatedUser = await userModel.findByIdAndUpdate(id, {
-    user_Name: user_Name || checkUser.user_Name,
-    password: newPassword || checkUser.password,
-    email: email || checkUser.email,
-    profile_Image: profile_Image || checkUser.profile_Image,
-  }).select(" -password ");
-
-  if (!updatedUser) {
-    throw new ApiError(400, "Something went wrong while updating the user");
-  }
-
-  let token = generateToken(updatedUser);
-  res.cookie("token", token);
-
-  res.status(201).json(new ApiResponse(201, updatedUser, "User updated successfully"));
-});
 
 export {
   signUpUser,
