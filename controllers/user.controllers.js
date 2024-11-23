@@ -2,34 +2,9 @@ import userModel from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import validator from "validator";
 import bcrypt from "bcrypt";
 import generateToken from "../utils/generateToken.js";
-
-const validateFields = (fields, req, res) => {
-  if (fields.some((field) => field?.trim() === "")) {
-    return res.json(
-        new ApiError(400, "All fields are required", "InputError: All fields are required")
-    );
-  }
-};
-
-const validateEmails = (email, req, res) => {
-  if (!validator.isEmail(email)) {
-    return res.json(
-        new ApiError(400, "Email is not valid", "ValidationError: Email validation failed")
-    );
-  }
-};
-
-const validateRoles = (userRole, req, res) => {
-  const validRoles = ["consumer", "seller", "vet"];
-  if (!validRoles.includes(userRole)) {
-    return res.json(
-        new ApiError(400, "Invalid user role", "ValidationError: Invalid user role")
-    );
-  }
-};
+import { validateRoles, validateEmails, validateFields } from "../utils/validateData.js";
 
 const signUpUser = asyncHandler(async (req, res) => {
   let { user_Name, email, password, user_Role, profile_Image, orders } = req.body;

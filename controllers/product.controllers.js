@@ -48,9 +48,88 @@ const createProducts = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, newProduct, "New Product Created successfully"));
 });
 
-const getProduct = asyncHandler();
-const updateProduct = asyncHandler();
-const deleteProduct = asyncHandler();
+const getProduct = asyncHandler(async (req, res) => {
+  let product_Id = req.params.product_id;
+
+  const product = await productModel.findById({ _id: product_Id });
+  if (!product) {
+    return res.json(
+      400,
+      "Product not found",
+      "NotFoundError: Product not found",
+    );
+  }
+
+  return res.status(201).json(new ApiResponse(201, product, "Product found"));
+});
+
+const updateProduct = asyncHandler(async (req, res) => {
+  let product_Id = req.params.product_id;
+  let { name, brand, price, description, category, product_Images } = req.body;
+
+  const productExist = await productModel.findById(product_Id);
+  if (!productExist) {
+    return res.json(
+      new ApiError(
+        400,
+        "Product not found",
+        "NotFoundError: Product not found",
+      ),
+    );
+  }
+
+  // we are not using updateOne() because updateOne() is applicable when there's more than one to update
+  // or when we do not want the updated document in response
+
+  const updateProd = await productModel.findByIdAndUpdate(
+    { _id: product_Id },
+    {
+      name: name || productExist.name,
+      brand: brand || productExist.brand,
+      price: price || productExist.price,
+      description: description || productExist.description,
+      category: category || productExist.category,
+      product_Images: product_Images || productExist.product_Images,
+    },
+    { new: true }, // by default findByIdAndUpdate returns the original document before the update is applied
+    // therefore, we need to add  { new: true } to get the updated document as a response, it's only meant for testing purpose
+  );
+
+  if (!updateProd) {
+    return res.json(
+      new ApiError(
+        500,
+        "Something went wrong while updating product",
+        "NetworkError",
+      ),
+    );
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, updateProd, "Product updated successfully"));
+});
+
+const deleteProduct = asyncHandler(async (req, res) => {
+  let product_Id = req.params.product_id;
+
+  const productExist = await productModel.findById({ _id: product_Id });
+  if (!productExist) {
+    return res.json(
+      new ApiError(
+        400,
+        "Product not found",
+        "NotFoundError: Product not found",
+      ),
+    );
+  }
+
+  const deleteProd = await productModel.findByIdAndDelete({ _id: product_Id });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, deleteProd, "Product deleted successfully"));
+});
+
 const searchProduct = asyncHandler();
 const getProductsBySellerId = asyncHandler();
 const getProductsBySellerName = asyncHandler();
