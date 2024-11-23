@@ -13,7 +13,10 @@ import {
 
 const router = Router();
 
-router.route("/").get(getAllProducts).post(isLoggedIn, createProducts);
+router.route("/").get(getAllProducts);
+
+// create a new product
+router.route("/new").post(isLoggedIn, createProducts);
 
 router
   .route("/p/:product_id")
