@@ -13,8 +13,8 @@ const appointmentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["None","Pending", "Scheduled", "Completed", "Cancelled"],
-      default: "None"
+      enum: ["None", "Pending", "Scheduled", "Completed", "Cancelled"],
+      default: "None",
     },
     vet_Info: {
       type: mongoose.Schema.ObjectId,

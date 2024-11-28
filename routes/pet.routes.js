@@ -12,7 +12,9 @@ import {
 
 const router = Router();
 
-router.route("/").get(getAllPets).post(isLoggedIn, createPets);
+router.route("/").get(getAllPets);
+
+router.route("/new").post(isLoggedIn, createPets);
 
 router
   .route("/p/:pet_id")

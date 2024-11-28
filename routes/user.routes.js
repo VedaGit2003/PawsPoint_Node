@@ -1,15 +1,15 @@
-import {Router} from "express";
-import {isLoggedIn} from "../middlewares/isLoggedIn.js";
+import { Router } from "express";
+import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 import {
-    signUpUser,
-    signUpVet,
-    signUpSeller,
-    loginUser,
-    logoutUser,
-    // getUser,
-    // getUserId,
-    updateUserId,
-    // refreshAccessToken,
+  signUpUser,
+  signUpVet,
+  signUpSeller,
+  loginUser,
+  logoutUser,
+  // getUser,
+  // getUserId,
+  updateUserId,
+  // refreshAccessToken,
 } from "../controllers/user.controllers.js";
 
 const router = Router();
@@ -32,6 +32,5 @@ router.route("/logout").post(isLoggedIn, logoutUser);
 
 // updating the user by id
 router.route("/update/:user_id").put(isLoggedIn, updateUserId);
-
 
 export default router;
