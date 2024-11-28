@@ -5,7 +5,36 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateFields, validateSellers } from "../utils/validateData.js";
 import userModel from "../models/user.models.js";
 
-const getAllProducts = asyncHandler(async (req, res) => {});
+const getAllProducts = asyncHandler(async (req, res) => {
+  try {
+    //fetching product
+    const products = await productModel.find()
+    //check fetching results
+    if (!products) {
+      //returning not found error
+      return res.json(
+        new ApiError(
+          400,
+          "Unable to fetch products",
+          "NotFoundError: Products not found"
+        )
+      )
+    }
+    //return response
+    return res.status(201).json(new ApiResponse(201, products, "All products fetched successfully"))
+  }
+  //sending network error
+  catch (error) {
+    return res.json(
+      new ApiError(
+        404,
+        "Internal Server Error",
+        "NetworkError"
+      )
+    )
+  }
+
+});
 
 const createProducts = asyncHandler(async (req, res) => {
   let { name, brand, price, description, category, product_Images } = req.body;
