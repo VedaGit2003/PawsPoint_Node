@@ -8,7 +8,7 @@ import {
   deleteProduct,
   searchProduct,
   getProductsBySellerId,
-  getProductsBySellerName,
+  // getProductsBySellerName,
 } from "../controllers/product.controllers.js";
 
 const router = Router();
@@ -31,6 +31,6 @@ router.route("/search").get(searchProduct);
 router.route("/seller/:sellerId").get(getProductsBySellerId);
 
 // search product by seller name
-router.route("/seller/:username").get(getProductsBySellerName);
+// router.route("/seller/:username").get(getProductsBySellerName);
 
 export default router;
