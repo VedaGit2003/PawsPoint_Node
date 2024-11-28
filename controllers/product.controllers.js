@@ -6,34 +6,27 @@ import { validateFields, validateSellers } from "../utils/validateData.js";
 import userModel from "../models/user.models.js";
 
 const getAllProducts = asyncHandler(async (req, res) => {
-  try {
-    //fetching product
-    const products = await productModel.find()
-    //check fetching results
-    if (!products) {
-      //returning not found error
-      return res.json(
-        new ApiError(
-          400,
-          "Unable to fetch products",
-          "NotFoundError: Products not found"
-        )
-      )
-    }
-    //return response
-    return res.status(201).json(new ApiResponse(201, products, "All products fetched successfully"))
-  }
-  //sending network error
-  catch (error) {
+  // Fetching products
+  const products = await productModel.find();
+
+  // Check fetching results
+  if (!products) {
+    // Returning not found error
     return res.json(
       new ApiError(
-        404,
-        "Internal Server Error",
-        "NetworkError"
+        400,
+        "Unable to fetch products",
+        "NotFoundError: Products not found"
       )
-    )
+    );
   }
 
+  // Return response
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(201, products, "All products fetched successfully")
+    );
 });
 
 const createProducts = asyncHandler(async (req, res) => {
@@ -41,7 +34,7 @@ const createProducts = asyncHandler(async (req, res) => {
   validateFields(
     [name, price, brand, description, category, product_Images],
     req,
-    res,
+    res
   );
 
   const seller_Info = req.user._id;
@@ -67,8 +60,8 @@ const createProducts = asyncHandler(async (req, res) => {
       new ApiError(
         400,
         "Something went wrong while creating the product",
-        "NetworkError",
-      ),
+        "NetworkError"
+      )
     );
   }
 
@@ -85,7 +78,7 @@ const getProduct = asyncHandler(async (req, res) => {
     return res.json(
       400,
       "Product not found",
-      "NotFoundError: Product not found",
+      "NotFoundError: Product not found"
     );
   }
 
@@ -99,11 +92,7 @@ const updateProduct = asyncHandler(async (req, res) => {
   const productExist = await productModel.findById(product_Id);
   if (!productExist) {
     return res.json(
-      new ApiError(
-        400,
-        "Product not found",
-        "NotFoundError: Product not found",
-      ),
+      new ApiError(400, "Product not found", "NotFoundError: Product not found")
     );
   }
 
@@ -120,7 +109,7 @@ const updateProduct = asyncHandler(async (req, res) => {
       category: category || productExist.category,
       product_Images: product_Images || productExist.product_Images,
     },
-    { new: true }, // by default findByIdAndUpdate returns the original document before the update is applied
+    { new: true } // by default findByIdAndUpdate returns the original document before the update is applied
     // therefore, we need to add  { new: true } to get the updated document as a response, it's only meant for testing purpose
   );
 
@@ -129,8 +118,8 @@ const updateProduct = asyncHandler(async (req, res) => {
       new ApiError(
         500,
         "Something went wrong while updating product",
-        "NetworkError",
-      ),
+        "NetworkError"
+      )
     );
   }
 
@@ -145,11 +134,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
   const productExist = await productModel.findById({ _id: product_Id });
   if (!productExist) {
     return res.json(
-      new ApiError(
-        400,
-        "Product not found",
-        "NotFoundError: Product not found",
-      ),
+      new ApiError(400, "Product not found", "NotFoundError: Product not found")
     );
   }
 
