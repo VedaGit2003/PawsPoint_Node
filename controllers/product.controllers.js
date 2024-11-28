@@ -132,7 +132,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 
 const searchProduct = asyncHandler();
 const getProductsBySellerId = asyncHandler();
-const getProductsBySellerName = asyncHandler();
+// const getProductsBySellerName = asyncHandler();
 
 export {
   getAllProducts,
@@ -142,5 +142,5 @@ export {
   deleteProduct,
   searchProduct,
   getProductsBySellerId,
-  getProductsBySellerName,
+  // getProductsBySellerName,
 };
