@@ -211,8 +211,207 @@ const deleteProduct = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, deleteProd, "Product deleted successfully"));
 });
 
-const searchProduct = asyncHandler();
-const getProductsBySellerId = asyncHandler();
+const searchProduct = asyncHandler(async (req, res) => {
+  let { page = 1, category, price, brand, sort, search } = req.query;
+
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = 5; // Limit products per range
+
+  const queryObject = {};
+  // Applying filter
+  // queryObject.seller_Info = sellerId;
+
+  validateFields(search, req, res);
+  if(search) {
+    const regex = new RegExp(search, "i");
+    queryObject.$or = [
+      { name: regex },
+      { description: regex }
+    ];
+  }
+
+  if (category) {
+    queryObject.category = new RegExp(category, "i");
+  }
+
+  if (brand) {
+    queryObject.brand = new RegExp(brand, "i");
+  }
+
+  if (price) {
+    /*
+     * Extracting the min and max from the price query object
+      and used MongoDB's $gte (greater than or equal to) and $lte (lesser than or equal to)
+      to get the products as per the filteration
+     */
+
+    const { min, max } = price;
+    queryObject.price = {};
+    // console.log(price);
+    if (min) queryObject.price.$gte = parseFloat(min);
+    if (max) queryObject.price.$lte = parseFloat(max);
+  }
+
+  // getting the total products based on the filteraton
+  const totalProducts = await productModel.countDocuments(queryObject);
+
+  // handle sorting
+  let sortObject = {};
+  if (sort) {
+    /*
+    sorting based on the filteration, like if user wants to getAll products
+    based on name in descending order as well it's categories in ascending order
+    he/she can perform it
+
+    1. splitting the object and mapping it
+    2. going through the array and checking the very first character
+    3. if it's starting with '-' it means it's going to descending otherwise ascending
+    */
+
+    const sortFields = sort.split(",").map((field) => field.trim());
+    // console.log(sortFields);
+    sortFields.forEach((field) => {
+      if (field.startsWith("-")) {
+        sortObject[field.slice(1)] = -1; // Descending order
+      } else {
+        sortObject[field] = 1; // Ascending order
+      }
+    });
+  }
+
+  const products = await productModel
+    .find(queryObject) // finding products based on the required queries
+    .sort(sortObject) // and sorting them if required
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+
+  if (products.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, products, "No Products available"));
+  }
+
+  const totalPages = Math.ceil(totalProducts / limitNum);
+  const remainingPages = totalPages - page;
+
+  const pagination = {
+    currentPage: page,
+    totalPages: totalPages,
+    remainingPages: remainingPages > 0 ? remainingPages : 0,
+  };
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        products,
+        "Products feteched successfully",
+        pagination
+      )
+    );
+});
+
+const getProductsBySellerId = asyncHandler(async (req, res) => {
+  let { page = 1, category, price, brand, sort } = req.query;
+  let sellerId = req.params.sellerId;
+
+  // validate the seller
+  const seller = await userModel
+    .findById(sellerId)
+    .select(" -password ");
+  if(seller)
+    validateSellers(seller, req, res);
+  else return res.json(new ApiError(400, "Invalid user id"));
+
+  const pageNum = parseInt(page, 10) || 1;
+  const limitNum = 5; // Limit products per range
+
+  const queryObject = {};
+  // Applying filter
+  // queryObject.seller_Info = seller;
+
+  if (category) {
+    queryObject.category = new RegExp(category, "i");
+  }
+
+  if (brand) {
+    queryObject.brand = new RegExp(brand, "i");
+  }
+
+  if (price) {
+    /*
+     * Extracting the min and max from the price query object
+      and used MongoDB's $gte (greater than or equal to) and $lte (lesser than or equal to)
+      to get the products as per the filteration
+     */
+
+    const { min, max } = price;
+    queryObject.price = {};
+    // console.log(price);
+    if (min) queryObject.price.$gte = parseFloat(min);
+    if (max) queryObject.price.$lte = parseFloat(max);
+  }
+
+  // getting the total products based on the filteraton
+  const totalProducts = await productModel.countDocuments(queryObject);
+
+  // handle sorting
+  let sortObject = {};
+  if (sort) {
+    /*
+    sorting based on the filteration, like if user wants to getAll products
+    based on name in descending order as well it's categories in ascending order
+    he/she can perform it
+
+    1. splitting the object and mapping it
+    2. going through the array and checking the very first character
+    3. if it's starting with '-' it means it's going to descending otherwise ascending
+    */
+
+    const sortFields = sort.split(",").map((field) => field.trim());
+    // console.log(sortFields);
+    sortFields.forEach((field) => {
+      if (field.startsWith("-")) {
+        sortObject[field.slice(1)] = -1; // Descending order
+      } else {
+        sortObject[field] = 1; // Ascending order
+      }
+    });
+  }
+
+  const products = await productModel
+    .find(queryObject) // finding products based on the required queries
+    .sort(sortObject) // and sorting them if required
+    .skip((pageNum - 1) * limitNum)
+    .limit(limitNum);
+
+  if (products.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, products, "No Products available"));
+  }
+
+  const totalPages = Math.ceil(totalProducts / limitNum);
+  const remainingPages = totalPages - page;
+
+  const pagination = {
+    currentPage: page,
+    totalPages: totalPages,
+    remainingPages: remainingPages > 0 ? remainingPages : 0,
+  };
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        products,
+        "Products feteched successfully",
+        pagination
+      )
+    );
+});
 // const getProductsBySellerName = asyncHandler();
 
 export {
