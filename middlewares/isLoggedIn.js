@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 const isLoggedIn = asyncHandler(async (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
-    throw new ApiError(400, "User is not logged in");
+    return res.json(new ApiError(400, "User is not logged in"));
   }
 
   let decode = jwt.verify(token, process.env.SECRET_KEY);
@@ -16,7 +16,7 @@ const isLoggedIn = asyncHandler(async (req, res, next) => {
     .select(" -password");
 
   if (!user) {
-    throw new ApiError(400, "User does not exist");
+    return res.json(new ApiError(400, "User does not exist"));
   }
   req.user = user;
   next();
