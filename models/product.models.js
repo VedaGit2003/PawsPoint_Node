@@ -22,6 +22,7 @@ const porductSchema = new mongoose.Schema(
       required: [true, "Please enter the description of your product"],
     },
     category: {
+      // will be making it a string [] later point of time
       type: String,
       required: [true, "Please provide the category of your product"],
     },
