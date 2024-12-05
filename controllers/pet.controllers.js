@@ -311,6 +311,8 @@ const getPetsBySellerId = asyncHandler(async (req, res) => {
   const queryObject = {};
 
   // applying filter
+  queryObject.seller_Info = seller;
+
   if (pet_Type) {
     queryObject.pet_Type = new RegExp(pet_Type, "i");
   }

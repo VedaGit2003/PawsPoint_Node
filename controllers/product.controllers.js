@@ -323,7 +323,7 @@ const getProductsBySellerId = asyncHandler(async (req, res) => {
 
   const queryObject = {};
   // Applying filter
-  // queryObject.seller_Info = seller;
+  queryObject.seller_Info = seller;
 
   if (category) {
     queryObject.category = new RegExp(category, "i");
