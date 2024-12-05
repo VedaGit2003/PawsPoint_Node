@@ -222,12 +222,9 @@ const searchProduct = asyncHandler(async (req, res) => {
   // queryObject.seller_Info = sellerId;
 
   validateFields(search, req, res);
-  if(search) {
+  if (search) {
     const regex = new RegExp(search, "i");
-    queryObject.$or = [
-      { name: regex },
-      { description: regex }
-    ];
+    queryObject.$or = [{ name: regex }, { description: regex }];
   }
 
   if (category) {
@@ -317,11 +314,8 @@ const getProductsBySellerId = asyncHandler(async (req, res) => {
   let sellerId = req.params.sellerId;
 
   // validate the seller
-  const seller = await userModel
-    .findById(sellerId)
-    .select(" -password ");
-  if(seller)
-    validateSellers(seller, req, res);
+  const seller = await userModel.findById(sellerId).select(" -password ");
+  if (seller) validateSellers(seller, req, res);
   else return res.json(new ApiError(400, "Invalid user id"));
 
   const pageNum = parseInt(page, 10) || 1;
