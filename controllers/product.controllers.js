@@ -10,7 +10,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
   let { page = 1, category, price, brand, sort } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 5; // Limit products per range
+  const limitNum = 20; // Limit products per range
 
   const queryObject = {};
   // Applying filter

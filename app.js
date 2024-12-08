@@ -28,4 +28,6 @@ app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/appointments", appointmentRouter);
 
 const PORT = process.env.PORT;
-app.listen(PORT);
+app.listen(PORT,'0.0.0.0',()=>{
+    console.log("Server running on ",PORT)
+});
