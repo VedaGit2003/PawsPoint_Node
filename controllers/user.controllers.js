@@ -229,9 +229,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
   let token = generateToken(checkUser);
   res.cookie("token", token);
+  //remove the password field
+  const jsonUser = await userModel
+    .findById(checkUser._id)
+    .select("-password")
+    .lean(); // Converts the Mongoose document to a plain object
+
 
   return res.json(
-    new ApiResponse(200, { user: checkUser, token }, "Login Successful")
+    new ApiResponse(200, { user: jsonUser, token }, "Login Successful")
   );
 });
 
