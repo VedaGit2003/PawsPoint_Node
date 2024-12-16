@@ -164,13 +164,20 @@ const updateProduct = asyncHandler(async (req, res) => {
   }
 
   //seller authorization check
-  const seller_Info=req.user._id
+  const seller_Info = req.user._id; 
+
   const verifySeller = await userModel
   .findOne({ _id: seller_Info })
   .select(" -password ");
 
   //only seller can update product as of now
-  validateSellers(verifySeller,req,res)
+  validateSellers(verifySeller,req,res);
+
+  const productOwner = await productModel.findOne({ seller_Info });
+  if(!productOwner) {
+    // console.log("This is IN-valid");
+    return res.json(new ApiError(404, "Seller In-valid", "NotFoundError: Product is not owned by respective seller!!"));
+  }
 
   // we are not using updateOne() because updateOne() is applicable when there's more than one to update
   // or when we do not want the updated document in response
