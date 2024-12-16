@@ -110,7 +110,7 @@ const createProducts = asyncHandler(async (req, res) => {
     .select(" -password ");
 
   // if any other guy who's not a seller and trying to create a product then it will give an error
-  validateSellers(verifySeller, res, res);
+  validateSellers(verifySeller, req, res);
 
   const newProduct = await productModel.create({
     name,
@@ -162,6 +162,15 @@ const updateProduct = asyncHandler(async (req, res) => {
       new ApiError(400, "Product not found", "NotFoundError: Product not found")
     );
   }
+
+  //seller authorization check
+  const seller_Info=req.user._id
+  const verifySeller = await userModel
+  .findOne({ _id: seller_Info })
+  .select(" -password ");
+
+  //only seller can update product as of now
+  validateSellers(verifySeller,req,res)
 
   // we are not using updateOne() because updateOne() is applicable when there's more than one to update
   // or when we do not want the updated document in response
