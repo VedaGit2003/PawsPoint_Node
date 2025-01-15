@@ -56,4 +56,16 @@ const validateSellers = (sellers, req, res) => {
   }
 };
 
-export { validateFields, validateEmails, validateRoles, validateSellers };
+const validateVets = (vets, req, res) => {
+  if(vets.user_Role !== "vet") {
+    return res.json(
+      new ApiError(
+        400,
+        "Seller does not exist",
+        "NotFoundError: Seller does not exist"
+      )
+    );
+  }
+};
+
+export { validateFields, validateEmails, validateRoles, validateSellers, validateVets };
