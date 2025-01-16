@@ -260,8 +260,201 @@ const approveAppointment = asyncHandler(async (req, res) => {
     );
 });
 
-const rejectAppointment = asyncHandler(async (req, res) => {});
-const completeAppointment = asyncHandler(async (req, res) => {});
+const rejectAppointment = asyncHandler(async (req, res) => {
+  const { appointmentId } = req.params;
+  // const { appointment_Date } = req.body;
+  const vetId = req.user._id; // Assuming vet's ID is obtained from JWT token middleware
+
+  // Fetch the appointment
+  const appointment = await appointmentModel.findById(appointmentId);
+  if (!appointment) {
+    return res
+      .status(404)
+      .json(new ApiError(404, "Appointment does not exist.", "NotFoundError"));
+  }
+
+  // Fetch the vet
+  const vet = await userModel.findById(vetId);
+  if (!vet || vet.user_Role !== "vet") {
+    return res
+      .status(403)
+      .json(
+        new ApiError(
+          403,
+          "Only vets can cancel appointments.",
+          "AuthorizationError"
+        )
+      );
+  }
+
+  // Check vet authorization
+  if (appointment.vet_Info.toString() !== vetId.toString()) {
+    return res
+      .status(403)
+      .json(
+        new ApiError(
+          403,
+          "You are not authorized to cancel this appointment.",
+          "AuthorizationError"
+        )
+      );
+  }
+
+  /*
+    will work on this part later on
+    Decisons of vet based on the date and time stuff
+  
+
+  // // Validate appointment time
+  // if (new Date(appointment_Date) < new Date()) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "Appointment time cannot be in the past.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  // // Check vet availability
+  // const overlappingAppointments = await appointmentModel.find({
+  //   vet_Info: vetId,
+  //   appointment_Date: {
+  //     $gte: appointment_Date,
+  //     $lt: new Date(appointment_Date).setMinutes(
+  //       new Date(appointment_Date).getMinutes() + 30
+  //     ),
+  //   },
+  // });
+  // if (overlappingAppointments.length > 0) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "The vet is not available at the requested time.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  */
+
+  // Update appointment
+  appointment.status = "Cancelled";
+  // appointment.appointment_Date = appointment_Date;
+  await appointment.save();
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        appointment,
+        "Appointment rejected and cancelled successfully."
+      )
+    );
+});
+
+const completeAppointment = asyncHandler(async (req, res) => {
+  const { appointmentId } = req.params;
+  // const { appointment_Date } = req.body;
+  const vetId = req.user._id; // Assuming vet's ID is obtained from JWT token middleware
+
+  // Fetch the appointment
+  const appointment = await appointmentModel.findById(appointmentId);
+  if (!appointment) {
+    return res
+      .status(404)
+      .json(new ApiError(404, "Appointment does not exist.", "NotFoundError"));
+  }
+
+  // Fetch the vet
+  const vet = await userModel.findById(vetId);
+  if (!vet || vet.user_Role !== "vet") {
+    return res
+      .status(403)
+      .json(
+        new ApiError(
+          403,
+          "Only vets complete appointments.",
+          "AuthorizationError"
+        )
+      );
+  }
+
+  // Check vet authorization
+  if (appointment.vet_Info.toString() !== vetId.toString()) {
+    return res
+      .status(403)
+      .json(
+        new ApiError(
+          403,
+          "You are not authorized to complete this appointment.",
+          "AuthorizationError"
+        )
+      );
+  }
+
+  /*
+    will work on this part later on
+    Decisons of vet based on the date and time stuff
+  
+
+  // // Validate appointment time
+  // if (new Date(appointment_Date) < new Date()) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "Appointment time cannot be in the past.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  // // Check vet availability
+  // const overlappingAppointments = await appointmentModel.find({
+  //   vet_Info: vetId,
+  //   appointment_Date: {
+  //     $gte: appointment_Date,
+  //     $lt: new Date(appointment_Date).setMinutes(
+  //       new Date(appointment_Date).getMinutes() + 30
+  //     ),
+  //   },
+  // });
+  // if (overlappingAppointments.length > 0) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "The vet is not available at the requested time.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  */
+
+  // Update appointment
+  appointment.status = "Completed";
+  // appointment.appointment_Date = appointment_Date;
+  await appointment.save();
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        appointment,
+        "Appointment completed successfully."
+      )
+    );
+});
 
 export {
   createAppointment,
