@@ -228,6 +228,7 @@ const deleteProduct = asyncHandler(async (req, res) => {
 });
 
 const searchProduct = asyncHandler(async (req, res) => {
+  // search here is the keyword which we want to search with-in the website
   let { page = 1, category, price, brand, sort, search } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
