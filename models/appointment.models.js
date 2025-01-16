@@ -21,7 +21,7 @@ const appointmentSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Vet information is required"],
     },
-    client_info: {
+    client_Info: {
       type: mongoose.Schema.ObjectId,
       ref: "User",
       required: [true, "Client information is required"],
