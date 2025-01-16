@@ -164,7 +164,7 @@ const getAppointmentByClient = asyncHandler(async (req, res) => {});
 
 const approveAppointment = asyncHandler(async (req, res) => {
   const { appointmentId } = req.params;
-  const { appointment_Date } = req.body;
+  // const { appointment_Date } = req.body;
   const vetId = req.user._id; // Assuming vet's ID is obtained from JWT token middleware
 
   // Fetch the appointment
@@ -202,44 +202,51 @@ const approveAppointment = asyncHandler(async (req, res) => {
       );
   }
 
-  // Validate appointment time
-  if (new Date(appointment_Date) < new Date()) {
-    return res
-      .status(400)
-      .json(
-        new ApiError(
-          400,
-          "Appointment time cannot be in the past.",
-          "ValidationError"
-        )
-      );
-  }
+  /*
+    will work on this part later on
+    Decisons of vet based on the date and time stuff
+  
 
-  // Check vet availability
-  const overlappingAppointments = await appointmentModel.find({
-    vet_Info: vetId,
-    appointment_Date: {
-      $gte: appointment_Date,
-      $lt: new Date(appointment_Date).setMinutes(
-        new Date(appointment_Date).getMinutes() + 30
-      ),
-    },
-  });
-  if (overlappingAppointments.length > 0) {
-    return res
-      .status(400)
-      .json(
-        new ApiError(
-          400,
-          "The vet is not available at the requested time.",
-          "ValidationError"
-        )
-      );
-  }
+  // // Validate appointment time
+  // if (new Date(appointment_Date) < new Date()) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "Appointment time cannot be in the past.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  // // Check vet availability
+  // const overlappingAppointments = await appointmentModel.find({
+  //   vet_Info: vetId,
+  //   appointment_Date: {
+  //     $gte: appointment_Date,
+  //     $lt: new Date(appointment_Date).setMinutes(
+  //       new Date(appointment_Date).getMinutes() + 30
+  //     ),
+  //   },
+  // });
+  // if (overlappingAppointments.length > 0) {
+  //   return res
+  //     .status(400)
+  //     .json(
+  //       new ApiError(
+  //         400,
+  //         "The vet is not available at the requested time.",
+  //         "ValidationError"
+  //       )
+  //     );
+  // }
+
+  */
 
   // Update appointment
   appointment.status = "Scheduled";
-  appointment.appointment_Date = appointment_Date;
+  // appointment.appointment_Date = appointment_Date;
   await appointment.save();
 
   res
