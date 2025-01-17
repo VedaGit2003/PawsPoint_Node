@@ -8,11 +8,17 @@ import {
   approveAppointment,
   rejectAppointment,
   completeAppointment,
+  getAllVets,
 } from "../controllers/appointment.controllers.js";
 
 const router = Router();
 
+//getting all vets
+router.route("/getallvets").get(isLoggedIn,getAllVets);
+
 router.route("/").post(isLoggedIn, createAppointment);
+
+
 
 router.route("/search/vets").get(searchVets);
 
