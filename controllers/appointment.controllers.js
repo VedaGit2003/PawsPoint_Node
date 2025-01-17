@@ -159,8 +159,101 @@ const searchVets = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, vets, "Vets feteched successfully", pagination));
 });
 
-const getAppointmentByVet = asyncHandler(async (req, res) => {});
-const getAppointmentByClient = asyncHandler(async (req, res) => {});
+const getAppointmentsByVet = asyncHandler(async (req, res) => {
+  const vetId = req.user._id; // Vet ID from the request URL
+  const { page = 1, limit = 10, status, startDate, endDate } = req.query;
+
+  // Validate if the vet exists
+  const vet = await userModel.findById(vetId);
+  if (!vet || vet.user_Role !== "vet") {
+    return res
+      .status(404)
+      .json(new ApiError(404, "Vet not found or invalid role", "ValidationError"));
+  }
+
+  // Build query with optional filters
+  const queryObject = { vet_Info: vetId };
+  if (status) queryObject.status = status; // Filter by status
+
+  // will work on this later on
+  // if (startDate || endDate) {
+  //   queryObject.appointment_Date = {};
+  //   if (startDate) queryObject.appointment_Date.$gte = new Date(startDate);
+  //   if (endDate) queryObject.appointment_Date.$lte = new Date(endDate);
+  // }
+
+  // Fetch appointments with pagination
+  const totalAppointments = await appointmentModel.countDocuments(queryObject);
+  const appointments = await appointmentModel
+    .find(queryObject)
+    .populate("vet_Info", "user_Name email vet_Type vet_Description")
+    .populate("client_Info", "user_Name email")
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  if (!appointments.length) {
+    return res.status(200).json(new ApiResponse(200, [], "No appointments found for this vet"));
+  }
+
+  const totalPages = Math.ceil(totalAppointments / limit);
+  const pagination = {
+    currentPage: parseInt(page),
+    totalPages,
+    remainingPages: Math.max(totalPages - parseInt(page), 0),
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, appointments, "Appointments fetched successfully", pagination)
+  );
+});
+
+const getAppointmentsByClient = asyncHandler(async (req, res) => {
+  const clientId = req.user._id; 
+  const { page = 1, limit = 10, status, startDate, endDate } = req.query;
+
+  // Validate if the client exists
+  const client = await userModel.findById(clientId);
+  if (!client || client.user_Role !== "consumer") {
+    return res
+      .status(404)
+      .json(new ApiError(404, "Client not found or invalid role", "ValidationError"));
+  }
+
+  // Build query with optional filters
+  const queryObject = { client_Info: clientId };
+  if (status) queryObject.status = status; // Filter by status
+
+  // will work on this later on
+  // if (startDate || endDate) {
+  //   queryObject.appointment_Date = {};
+  //   if (startDate) queryObject.appointment_Date.$gte = new Date(startDate);
+  //   if (endDate) queryObject.appointment_Date.$lte = new Date(endDate);
+  // }
+
+  // Fetch appointments with pagination
+  const totalAppointments = await appointmentModel.countDocuments(queryObject);
+  const appointments = await appointmentModel
+    .find(queryObject)
+    .populate("vet_Info", "user_Name email vet_Type vet_Description")
+    .populate("client_Info", "user_Name email")
+    .skip((page - 1) * limit)
+    .limit(parseInt(limit));
+
+  if (!appointments.length) {
+    return res.status(200).json(new ApiResponse(200, [], "No appointments found for this client"));
+  }
+
+  const totalPages = Math.ceil(totalAppointments / limit);
+  const pagination = {
+    currentPage: parseInt(page),
+    totalPages,
+    remainingPages: Math.max(totalPages - parseInt(page), 0),
+  };
+
+  return res.status(200).json(
+    new ApiResponse(200, appointments, "Appointments fetched successfully", pagination)
+  );
+});
 
 const approveAppointment = asyncHandler(async (req, res) => {
   const { appointmentId } = req.params;
@@ -448,19 +541,15 @@ const completeAppointment = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        appointment,
-        "Appointment completed successfully."
-      )
+      new ApiResponse(200, appointment, "Appointment completed successfully.")
     );
 });
 
 export {
   createAppointment,
   searchVets,
-  getAppointmentByVet,
-  getAppointmentByClient,
+  getAppointmentsByVet,
+  getAppointmentsByClient,
   approveAppointment,
   rejectAppointment,
   completeAppointment,
