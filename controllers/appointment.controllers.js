@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import userModel from "../models/user.models.js";
-import { validateVets } from "../utils/validateData.js";
+import { validateVets, validateFields } from "../utils/validateData.js";
 
 const createAppointment = asyncHandler(async (req, res) => {
   let {
@@ -15,23 +15,11 @@ const createAppointment = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Validate required fields
-  if (
-    !appointment_Date ||
-    !vet_Info ||
-    !client_Info ||
-    !client_Info._id ||
-    !vet_Info._id
-  ) {
-    return res
-      .status(400)
-      .json(
-        new ApiError(
-          400,
-          "All fields are required, including vet and client info",
-          "ValidationError"
-        )
-      );
-  }
+  validateFields(
+    [appointment_Date, vet_Info, client_Info],
+    req,
+    res
+  );
 
   // Validate if the vet exists
   const vet = await userModel.findById(vet_Info._id);
