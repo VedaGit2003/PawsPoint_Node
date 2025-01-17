@@ -3,8 +3,8 @@ import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 import {
   createAppointment,
   searchVets,
-  getAppointmentByVet,
-  getAppointmentByClient,
+  getAppointmentsByVet,
+  getAppointmentsByClient,
   approveAppointment,
   rejectAppointment,
   completeAppointment,
@@ -16,9 +16,9 @@ router.route("/").post(isLoggedIn, createAppointment);
 
 router.route("/search/vets").get(searchVets);
 
-router.route("/vet").get(isLoggedIn, getAppointmentByVet);
+router.route("/vet").get(isLoggedIn, getAppointmentsByVet);
 
-router.route("/client").get(isLoggedIn, getAppointmentByClient);
+router.route("/client").get(isLoggedIn, getAppointmentsByClient);
 
 router.route("/:appointmentId/approve").put(isLoggedIn, approveAppointment);
 
