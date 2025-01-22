@@ -24,8 +24,15 @@ const porductSchema = new mongoose.Schema(
     category: {
       // will be making it a string [] later point of time
       type: String,
+      // [
+      //   {
+      //     type:mongoose.Schema.ObjectId,
+      //     ref:"Category"
+      //   }
+      // ]
       required: [true, "Please provide the category of your product"],
-    },
+    }
+    ,
     product_Images: {
       type: [String],
       required: [true, "Please provide the images of your product"],
