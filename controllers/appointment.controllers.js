@@ -5,6 +5,30 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import userModel from "../models/user.models.js";
 import { validateVets, validateFields } from "../utils/validateData.js";
 
+
+//getting all vets controller
+const getAllVets=asyncHandler(async(req,res) => {
+  const vets=await userModel.find({user_Role:"vet"}).select("-password");
+  
+  if(!vets){
+    return res
+    .status(404)
+    .json(new ApiError(404, "No vets available right now", "NotFoundError"));
+  }
+
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        vets,
+        "Appointment Created Successfully"
+      )
+    );
+
+
+})
+
 const createAppointment = asyncHandler(async (req, res) => {
   let {
     appointment_Date,
@@ -534,6 +558,7 @@ const completeAppointment = asyncHandler(async (req, res) => {
 });
 
 export {
+  getAllVets,
   createAppointment,
   searchVets,
   getAppointmentsByVet,

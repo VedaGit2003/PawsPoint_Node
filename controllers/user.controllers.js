@@ -248,6 +248,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   );
 });
 
+//update user details
 const updateUserId = asyncHandler(async (req, res) => {
   let id = req.params.user_id;
   let { user_Name, email, password, profile_Image } = req.body;

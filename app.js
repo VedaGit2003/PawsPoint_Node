@@ -9,6 +9,7 @@ import productRouter from "./routes/product.routes.js";
 import petRouter from "./routes/pet.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import appointmentRouter from "./routes/appointment.routes.js";
+import categoryRouter from "./routes/category.routes.js"
 
 connectDB();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/category",categoryRouter)
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/pets", petRouter);
 app.use("/api/v1/orders", orderRouter);
