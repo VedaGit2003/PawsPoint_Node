@@ -14,7 +14,7 @@ import {
   getCanceledOrderSeller,
   gettingItemsNeedingApproval,
   handleItems,
-} from "../controllers/order.controllers.js";
+} from "../controllers/order.controller.js";
 
 const router = Router();
 

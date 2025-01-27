@@ -9,7 +9,7 @@ import {
   searchProduct,
   getProductsBySellerId,
   // getProductsBySellerName,
-} from "../controllers/product.controllers.js";
+} from "../controllers/product.controller.js";
 
 const router = Router();
 

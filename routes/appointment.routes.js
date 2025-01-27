@@ -9,7 +9,7 @@ import {
   rejectAppointment,
   completeAppointment,
   getAllVets,
-} from "../controllers/appointment.controllers.js";
+} from "../controllers/appointment.controller.js";
 
 const router = Router();
 

@@ -8,7 +8,7 @@ import {
   deletePet,
   searchPets,
   getPetsBySellerId,
-} from "../controllers/pet.controllers.js";
+} from "../controllers/pet.controller.js";
 
 const router = Router();
 

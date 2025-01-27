@@ -10,7 +10,7 @@ import {
   // getUserId,
   updateUserId,
   // refreshAccessToken,
-} from "../controllers/user.controllers.js";
+} from "../controllers/user.controller.js";
 
 const router = Router();
 
