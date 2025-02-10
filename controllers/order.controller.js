@@ -1,16 +1,253 @@
 import orderModel from "../models/order.models.js";
+import userModel from "../models/user.models.js";
+import productModel from "../models/product.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const createOrder = asyncHandler();
-const confirmOrder = asyncHandler();
-const completeOrder = asyncHandler();
-const cancelOrder = asyncHandler();
-const getApprovedOrdersUsers = asyncHandler();
-const getRejectedOrdersUsers = asyncHandler();
-const getConfirmedOrderUsers = asyncHandler();
-const getCanceledOrderUsers = asyncHandler();
+const createOrder = asyncHandler(async (req, res, next) => {
+  const {
+    user,
+    seller,
+    cart,
+    shipping_Address,
+    billing_Address,
+    price,
+    delivery_Cost,
+  } = req.body;
+
+  // 1. Validate required fields
+  if (
+    !user ||
+    !seller ||
+    !cart ||
+    !shipping_Address ||
+    !billing_Address ||
+    price === undefined
+  ) {
+    return res.status(400).json(new ApiError("Missing required fields", 400));
+  }
+
+  // 2. Validate cart
+  if (!Array.isArray(cart) || cart.length === 0) {
+    return res.status(400).json(new ApiError("Cart cannot be empty", 400));
+  }
+
+  for (const item of cart) {
+    if (!item.itemType || !["Product", "Pet"].includes(item.itemType)) {
+      return res.status(400).json(new ApiError("Invalid cart item type", 400));
+    }
+    if (!item.item || !item.quantity || item.quantity <= 0) {
+      return res
+        .status(400)
+        .json(new ApiError("Invalid cart item or quantity", 400));
+    }
+
+    // Check if referenced item exists
+    const referencedItem = await productModel.findById(item.item);
+    if (!referencedItem) {
+      return res
+        .status(400)
+        .json(new ApiError(`Item with ID ${item.item} not found`, 404));
+    }
+
+    // Check stock availability
+    if (referencedItem.stock < item.quantity) {
+      return next(
+        new res.status(400).json(
+          `Insufficient stock for item with ID ${item.item}`,
+          400
+        )
+      );
+    }
+  }
+
+  // 3. Verify user and seller exist
+  const buyer = await userModel.findById(user);
+  const sellerExists = await userModel.findById(seller);
+
+  if (!buyer) {
+    return next(new ApiError("User not found", 404));
+  }
+  if (!sellerExists) {
+    return next(new ApiError("Seller not found", 404));
+  }
+
+  // 4. Calculate total order value
+  const total_Order_Value = price + (delivery_Cost || 0);
+
+  // 5. Create the order
+  const newOrder = await orderModel.create({
+    user,
+    seller,
+    cart,
+    shipping_Address,
+    billing_Address,
+    price,
+    delivery_Cost,
+    total_Order_Value,
+    order_Time: new Date(),
+  });
+
+  // 6. Respond with the created order
+  res
+    .status(201)
+    .json(new ApiResponse(201, "Order created successfully", newOrder));
+});
+
+const confirmOrder = asyncHandler(async (req, res, next) => {
+  const { orderId } = req.params;
+
+  const order = await orderModel.findById(orderId);
+  if (!order) {
+    return res.status(404).json(new ApiError("Order not found", 404));
+  }
+
+  if (order.status !== "Pending") {
+    return res
+      .status(400)
+      .json(new ApiError("Only pending orders can be confirmed", 400));
+  }
+
+  order.status = "Confirmed";
+  order.orders_Confirmed = true;
+  order.shipment_Time = new Date();
+
+  await order.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Order confirmed successfully", order));
+});
+
+const cancelOrder = asyncHandler(async (req, res, next) => {
+  const { orderId } = req.params;
+  const { userId } = req.body;
+
+  const order = await orderModel.findById(orderId);
+  if (!order) {
+    return next(new ApiError("Order not found", 404));
+  }
+
+  if (order.isOrderCanceled) {
+    return next(new ApiError("Order has already been canceled", 400));
+  }
+
+  // Check authorization
+  if (
+    !order.user.equals(userId) &&
+    (!order.seller || !order.seller.equals(userId))
+  ) {
+    return next(
+      new ApiError("You are not authorized to cancel this order", 403)
+    );
+  }
+
+  // Apply cancellation fee if order is confirmed and shipment has started
+  if (order.status === "Confirmed" && order.shipment_Time) {
+    order.cancellation_Fees = order.total_Order_Value * 0.3;
+  }
+
+  order.status = "Cancelled";
+  order.orders_Cancelled = true;
+  order.cancellation_Time = new Date();
+
+  await order.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Order canceled successfully", order));
+});
+
+const completeOrder = asyncHandler(async (req, res, next) => {
+  const { orderId } = req.params;
+
+  const order = await orderModel.findById(orderId);
+  if (!order) {
+    return res.status(404).json(new ApiError("Order not found", 404));
+  }
+
+  if (order.status !== "Confirmed") {
+    return res
+      .status(400)
+      .json(new ApiError("Only confirmed orders can be completed", 400));
+  }
+
+  order.status = "Delivered";
+  order.orders_Completed = true;
+  order.delivery_Time = new Date();
+
+  await order.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Order completed successfully", order));
+});
+
+const getApprovedOrdersUsers = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const orders = await orderModel.find({ user: userId, status: "Delivered" });
+  if (!orders || orders.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiError("No approved orders found for this user", 404));
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Approved orders retrieved successfully", orders)
+    );
+});
+
+const getRejectedOrdersUsers = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const orders = await orderModel.find({ user: userId, status: "Rejected" });
+  if (!orders || orders.length === 0) {
+    return next(new ApiError("No rejected orders found for this user", 404));
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Rejected orders retrieved successfully", orders)
+    );
+});
+
+const getCanceledOrderUsers = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const orders = await orderModel.find({ user: userId, status: "Cancelled" });
+  if (!orders || orders.length === 0) {
+    return res
+      .status(404)
+      .json(new ApiError("No canceled orders found for this user", 404));
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Canceled orders retrieved successfully", orders)
+    );
+});
+
+const getConfirmedOrderUsers = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+
+  const orders = await orderModel.find({ user: userId, status: "Confirmed" });
+  if (!orders || orders.length === 0) {
+    return next(new ApiError("No confirmed orders found for this user", 404));
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "Confirmed orders retrieved successfully", orders)
+    );
+});
+
 const getConfirmedOrderSeller = asyncHandler();
 const getCanceledOrderSeller = asyncHandler();
 const gettingItemsNeedingApproval = asyncHandler();
