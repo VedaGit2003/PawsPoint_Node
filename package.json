@@ -17,6 +17,7 @@
     "config": "^3.3.12",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.21.1",
@@ -26,6 +27,7 @@
     "nodemon": "^3.1.7",
     "otp-agent": "^3.0.3",
     "prettier": "^3.3.3",
+    "razorpay": "^2.9.6",
     "validator": "^13.12.0"
   }
 }
