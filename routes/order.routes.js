@@ -14,11 +14,16 @@ import {
   getCanceledOrderSeller,
   gettingItemsNeedingApproval,
   handleItems,
+  createSingleOrder,
+  createSingleOrderOnline,
 } from "../controllers/order.controller.js";
 
 const router = Router();
 
 router.route("/").post(isLoggedIn, createOrder);
+
+router.route("/singleOrder").post(isLoggedIn,createSingleOrder)
+router.route("/singleOrderOnline").post(isLoggedIn,createSingleOrderOnline)
 
 router.route("/:orderId/confirm").put(isLoggedIn, confirmOrder);
 

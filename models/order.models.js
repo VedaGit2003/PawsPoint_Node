@@ -23,7 +23,7 @@ const orderSchema = new mongoose.Schema(
         item: {
           type: mongoose.Schema.ObjectId,
           required: true,
-          refPath: "cart.itemType", // Dynamically resolves the reference based on itemType
+          refPath: "cart.itemType",
         },
         quantity: {
           type: Number,
@@ -42,7 +42,7 @@ const orderSchema = new mongoose.Schema(
         required: [true, "Please enter the street name"],
       },
       building_No: {
-        type: Number,
+        type: String,
         required: [true, "Please enter the building number"],
       },
       city: {
@@ -68,7 +68,7 @@ const orderSchema = new mongoose.Schema(
         required: [true, "Please enter the street name"],
       },
       building_No: {
-        type: Number,
+        type: String,
         required: [true, "Please enter the building number"],
       },
       city: {
@@ -93,7 +93,6 @@ const orderSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    // all of these will be provided via seller
     shipment_Time: {
       type: Date,
     },
@@ -143,6 +142,16 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Added payment method
+    payment_Method: {
+      type: String,
+      enum: ["COD", "Online"],
+      required: true,
+      default: "COD",
+    },
+    payment_Id:{
+      type:String
+    }
   },
   {
     timestamps: {
@@ -154,3 +163,4 @@ const orderSchema = new mongoose.Schema(
 
 const orderModel = mongoose.model("Order", orderSchema);
 export default orderModel;
+

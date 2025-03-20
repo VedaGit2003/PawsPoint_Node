@@ -9,6 +9,8 @@ import {
   // getUser,
   // getUserId,
   updateUserId,
+  addAddress,
+  updateAddress
   // refreshAccessToken,
 } from "../controllers/user.controller.js";
 
@@ -32,5 +34,12 @@ router.route("/logout").post(isLoggedIn, logoutUser);
 
 // updating the user by id
 router.route("/update/:user_id").put(isLoggedIn, updateUserId);
+
+// Address management routes
+router.route("/address")
+  .post(isLoggedIn, addAddress);
+
+router.route("/address/:addressId")
+  .put(isLoggedIn, updateAddress);
 
 export default router;

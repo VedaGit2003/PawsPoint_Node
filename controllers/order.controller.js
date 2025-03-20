@@ -1,9 +1,182 @@
 import orderModel from "../models/order.models.js";
 import userModel from "../models/user.models.js";
 import productModel from "../models/product.models.js";
+import petModel from "../models/pet.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+
+
+//createSingleOrder
+const createSingleOrder = asyncHandler(async (req, res, next) => {
+  const {
+    user,
+    seller,
+    productId,
+   
+    itemType,
+    quantity = 1,
+    shipping_Address,
+    billing_Address,
+    price,
+    delivery_Cost = 0,
+    payment_Method,
+   
+  } = req.body;
+
+  // 1️⃣ Validate required fields
+  if (
+    !user ||
+    !seller ||
+    !productId ||
+    !itemType ||
+    !shipping_Address ||
+    !billing_Address ||
+    price === undefined ||
+    !payment_Method
+  ) {
+    return next(new ApiError("Missing required fields", 400));
+  }
+
+  // Check if user and seller exist
+  const buyer = await userModel.findById(user);
+  const sellerExists = await userModel.findById(seller);
+
+  if (!buyer) return next(new ApiError("User not found", 404));
+  if (!sellerExists) return next(new ApiError("Seller not found", 404));
+
+  // 3️ Validate product or pet based on itemType
+  let itemData;
+
+  if (itemType === "Product") {
+    itemData = await productModel.findById(productId);
+  } else if (itemType === "Pet") {
+    itemData = await petModel.findById(productId);
+  } else {
+    return next(new ApiError("Invalid item type", 400));
+  }
+
+  if (!itemData) {
+    return next(new ApiError(`${itemType} not found`, 404));
+  }
+
+  // 4️ Calculate total order value (product price * quantity + delivery cost)
+  const totalPrice = price * quantity;
+  const total_Order_Value = totalPrice + delivery_Cost;
+
+  // 5️ Create a new order with cart structure
+  const newOrder = await orderModel.create({
+    user,
+    seller,
+    
+    cart: [
+      {
+        itemType,
+        item: productId,
+        quantity,
+      },
+    ],
+    shipping_Address,
+    billing_Address,
+    price: totalPrice,
+    delivery_Cost,
+    total_Order_Value,
+    payment_Method,
+   
+    order_Time: new Date(),
+  });
+
+  // 6️ Return the response
+  res.status(201).json(new ApiResponse(201, "Single order created successfully", newOrder));
+});
+
+const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
+  const {
+    user,
+    seller,
+    productId,
+    itemType,
+    quantity = 1,
+    status="Confirmed",
+    shipping_Address,
+    billing_Address,
+    price,
+    delivery_Cost = 0,
+    payment_Method,
+    payment_Id
+  } = req.body;
+
+  // 1️⃣ Validate required fields
+  if (
+    !user ||
+    !seller ||
+    !productId ||
+    !itemType ||
+    !shipping_Address ||
+    !billing_Address ||
+    price === undefined || !payment_Id ||
+    !payment_Method
+  ) {
+    return next(new ApiError("Missing required fields", 400));
+  }
+
+  // Check if user and seller exist
+  const buyer = await userModel.findById(user);
+  const sellerExists = await userModel.findById(seller);
+
+  if (!buyer) return next(new ApiError("User not found", 404));
+  if (!sellerExists) return next(new ApiError("Seller not found", 404));
+
+  // 3️ Validate product or pet based on itemType
+  let itemData;
+
+  if (itemType === "Product") {
+    itemData = await productModel.findById(productId);
+  } else if (itemType === "Pet") {
+    itemData = await petModel.findById(productId);
+  } else {
+    return next(new ApiError("Invalid item type", 400));
+  }
+
+  if (!itemData) {
+    return next(new ApiError(`${itemType} not found`, 404));
+  }
+
+  // 4️ Calculate total order value (product price * quantity + delivery cost)
+  const totalPrice = price * quantity;
+  const total_Order_Value = totalPrice + delivery_Cost;
+
+  // 5️ Create a new order with cart structure
+  try{
+    const newOrder = await orderModel.create({
+      user,
+      seller,
+      status,
+      cart: [
+        {
+          itemType,
+          item: productId,
+          quantity,
+        },
+      ],
+      shipping_Address,
+      billing_Address,
+      price: totalPrice,
+      delivery_Cost,
+      total_Order_Value,
+      payment_Method,
+      payment_Id,
+      order_Time: new Date(),
+    });
+  
+    // 6️ Return the response
+    res.status(201).json(new ApiResponse(201, "Single order created successfully", newOrder));
+  }catch (error) {
+    console.error("Order creation failed:", error);
+    return next(new ApiError("Order creation failed", 500));
+  }
+
+});
 
 const createOrder = asyncHandler(async (req, res, next) => {
   const {
@@ -254,6 +427,8 @@ const gettingItemsNeedingApproval = asyncHandler();
 const handleItems = asyncHandler();
 
 export {
+  createSingleOrder,
+  createSingleOrderOnline,
   createOrder,
   confirmOrder,
   completeOrder,

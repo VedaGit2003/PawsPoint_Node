@@ -1,4 +1,5 @@
 import userModel from "../models/user.models.js";
+import addressModel from "../models/address.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -339,6 +340,108 @@ const refreshAccessToken = asyncHandler(async (req, res) => {});
 
 **/
 
+
+// ====================Address Implementation==================Under Testing============
+// Add these new controller functions at the bottom of the file
+const addAddress = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const {
+    buildingNo,
+    streetAddress,
+    city,
+    state,
+    pin,
+    country = "India",
+    isPrimary = false,
+  } = req.body;
+
+  // Validate required fields
+  // validateFields([streetAddress, city, state, pin], req, res);
+
+  // Validate PIN code format
+  if (!/^\d{6}$/.test(pin)) {
+    return res.json(
+      new ApiError(400, "Invalid PIN code format", "ValidationError")
+    );
+  }
+
+  try {
+    // Handle primary address logic
+    if (isPrimary) {
+      await addressModel.updateOne(
+        { userID: userId },
+        { $set: { "address.$[].isPrimary": false } }
+      );
+    }
+
+    // Create new address object
+    const newAddress = {
+      buildingNo,
+      streetAddress,
+      city,
+      state,
+      pin,
+      country,
+      isPrimary,
+    };
+
+    // Update or create address 
+    const updatedAddress = await addressModel.findOneAndUpdate(
+      { userID: userId },
+      { $push: { address: newAddress } },
+      { new: true, upsert: true }
+    );
+
+    return res.json(
+      new ApiResponse(201, updatedAddress, "Address added successfully")
+    );
+  } catch (error) {
+    return res.json(
+      new ApiError(500, "Failed to add address", error.message)
+    );
+  }
+});
+
+const updateAddress = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const addressId = req.params.addressId;
+  const updates = req.body;
+
+  if (!addressId) {
+    return res.json(new ApiError(400, "Address ID is required"));
+  }
+
+  try {
+    // Handle primary address logic
+    if (updates.isPrimary) {
+      await addressModel.updateOne(
+        { userID: userId },
+        { $set: { "address.$[].isPrimary": false } }
+      );
+    }
+
+    // Update specific address fields
+    const updatedAddress = await addressModel.findOneAndUpdate(
+      { userID: userId, "address._id": addressId },
+      { $set: updates },
+      { new: true }
+    );
+
+    if (!updatedAddress) {
+      return res.json(new ApiError(404, "Address not found"));
+    }
+
+    return res.json(
+      new ApiResponse(200, updatedAddress, "Address updated successfully")
+    );
+  } catch (error) {
+    return res.json(
+      new ApiError(500, "Failed to update address", error.message)
+    );
+  }
+});
+
+
 export {
   signUpUser,
   signUpSeller,
@@ -349,4 +452,6 @@ export {
   // getUserId,
   updateUserId,
   // refreshAccessToken,
+  addAddress,
+  updateAddress
 };
