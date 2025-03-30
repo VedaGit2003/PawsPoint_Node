@@ -13,7 +13,7 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
     user,
     seller,
     productId,
-   
+
     itemType,
     quantity = 1,
     shipping_Address,
@@ -21,13 +21,13 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
     price,
     delivery_Cost = 0,
     payment_Method,
-   
+
   } = req.body;
 
   // 1️⃣ Validate required fields
   if (
     !user ||
-    !seller ||
+    // !seller ||
     !productId ||
     !itemType ||
     !shipping_Address ||
@@ -40,10 +40,10 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
 
   // Check if user and seller exist
   const buyer = await userModel.findById(user);
-  const sellerExists = await userModel.findById(seller);
+  // const sellerExists = await userModel.findById(seller);
 
   if (!buyer) return next(new ApiError("User not found", 404));
-  if (!sellerExists) return next(new ApiError("Seller not found", 404));
+  // if (!sellerExists) return next(new ApiError("Seller not found", 404));
 
   // 3️ Validate product or pet based on itemType
   let itemData;
@@ -67,12 +67,13 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
   // 5️ Create a new order with cart structure
   const newOrder = await orderModel.create({
     user,
-    seller,
-    
+    // seller,
+
     cart: [
       {
         itemType,
         item: productId,
+        seller:seller,
         quantity,
       },
     ],
@@ -82,7 +83,7 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
     delivery_Cost,
     total_Order_Value,
     payment_Method,
-   
+
     order_Time: new Date(),
   });
 
@@ -97,7 +98,7 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
     productId,
     itemType,
     quantity = 1,
-    status="Confirmed",
+    status = "Confirmed",
     shipping_Address,
     billing_Address,
     price,
@@ -109,7 +110,7 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
   // 1️⃣ Validate required fields
   if (
     !user ||
-    !seller ||
+    // !seller ||
     !productId ||
     !itemType ||
     !shipping_Address ||
@@ -122,10 +123,10 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
 
   // Check if user and seller exist
   const buyer = await userModel.findById(user);
-  const sellerExists = await userModel.findById(seller);
+  // const sellerExists = await userModel.findById(seller);
 
   if (!buyer) return next(new ApiError("User not found", 404));
-  if (!sellerExists) return next(new ApiError("Seller not found", 404));
+  // if (!sellerExists) return next(new ApiError("Seller not found", 404));
 
   // 3️ Validate product or pet based on itemType
   let itemData;
@@ -147,16 +148,17 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
   const total_Order_Value = totalPrice + delivery_Cost;
 
   // 5️ Create a new order with cart structure
-  try{
+  try {
     const newOrder = await orderModel.create({
       user,
-      seller,
+      // seller,
       status,
       cart: [
         {
           itemType,
           item: productId,
           quantity,
+          seller:seller
         },
       ],
       shipping_Address,
@@ -168,10 +170,10 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
       payment_Id,
       order_Time: new Date(),
     });
-  
+
     // 6️ Return the response
     res.status(201).json(new ApiResponse(201, "Single order created successfully", newOrder));
-  }catch (error) {
+  } catch (error) {
     console.error("Order creation failed:", error);
     return next(new ApiError("Order creation failed", 500));
   }
@@ -426,10 +428,134 @@ const getCanceledOrderSeller = asyncHandler();
 const gettingItemsNeedingApproval = asyncHandler();
 const handleItems = asyncHandler();
 
+const getOrdersByUser = async (req, res) => {
+  const { userId } = req.body
+
+  try {
+    // Check if user exists
+    const user = await userModel.findById(userId)
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User does not exist"
+      })
+    }
+
+    // Fetch orders and populate cart.item with full item details
+    const orderData = await orderModel
+      .find({ user: userId })
+      .populate('cart.item')
+      .sort({created_At:-1})
+
+    if (!orderData || orderData.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found"
+      })
+    }
+
+    // Return orders with populated item details
+    return res.status(200).json({
+      success: true,
+      message: "Orders fetched successfully",
+      order: orderData
+    })
+  } catch (error) {
+    console.error("Error fetching orders:", error)
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message
+    })
+  }
+}
+
+const getOrderBySeller = async (req, res) => {
+  const { sellerId } = req.body; // Get sellerId from request body
+
+  try {
+    // Check if the seller exists
+    // const user = await userModel.findById(sellerId);
+    // if (!user) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Seller does not exist",
+    //   });
+    // }
+
+    // Fetch orders where the seller exists in the cart
+    const orderData = await orderModel
+      .find({ "cart.seller": sellerId })
+      .populate("user", "name email") // Populate user details (only name and email)
+      .populate("cart.item") // Populate item details
+      .lean(); // Convert to plain JSON for better manipulation
+
+    // Filter only the relevant cart items for the seller
+    const filteredOrders = orderData.map((order) => ({
+      ...order,
+      cart: order.cart.filter((cartItem) => cartItem.seller.toString() === sellerId),
+    }));
+
+    if (!filteredOrders.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Orders fetched successfully",
+      orders: filteredOrders,
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+ const getAllOrders = async (req, res) => {
+  const user_Id = req.user._id;
+
+  try {
+   
+    const user = await userModel.findById(user_Id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check if the user is an admin
+    if (user.user_Role !== "admin") {
+      return res.status(403).json({ success: false, message: "User is not Admin" });
+    }
+
+    // Fetch all orders
+    const response = await orderModel.find().sort({ created_At: -1 });
+
+    // Return response based on whether orders exist
+    if (response.length > 0) {
+      return res.status(200).json({ success: true, message: "Orders Fetched", orders: response });
+    } else {
+      return res.status(200).json({ success: true, message: "No orders yet", orders: [] });
+    }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+
 export {
   createSingleOrder,
   createSingleOrderOnline,
   createOrder,
+  getAllOrders,
+  getOrdersByUser,
+  getOrderBySeller,
   confirmOrder,
   completeOrder,
   cancelOrder,
@@ -441,4 +567,5 @@ export {
   getCanceledOrderSeller,
   gettingItemsNeedingApproval,
   handleItems,
+
 };
