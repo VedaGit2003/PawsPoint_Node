@@ -16,6 +16,9 @@ import {
   handleItems,
   createSingleOrder,
   createSingleOrderOnline,
+  getOrdersByUser,
+  getOrderBySeller,
+  getAllOrders,
 } from "../controllers/order.controller.js";
 
 const router = Router();
@@ -54,5 +57,11 @@ router
 // handle items -> what the fuck it's doing -> providing the overall status of the item with it's maxDelivery time and other stuff
 // from where we're getting the itemId -> need to be tested
 router.route("/:orderId/handleItem/:itemId/user").put(isLoggedIn, handleItems);
+
+
+//get order details
+router.route('/u/getOrderDetails').post(isLoggedIn,getOrdersByUser)
+router.route('/s/getOrderDetails').post(isLoggedIn,getOrderBySeller)
+router.route('/a/getAllOrders').get(isLoggedIn,getAllOrders)
 
 export default router;

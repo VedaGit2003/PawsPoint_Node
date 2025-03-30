@@ -8,11 +8,11 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    seller: {
-      type: mongoose.Schema.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    // seller: {
+    //   type: mongoose.Schema.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
     cart: [
       {
         itemType: {
@@ -24,6 +24,10 @@ const orderSchema = new mongoose.Schema(
           type: mongoose.Schema.ObjectId,
           required: true,
           refPath: "cart.itemType",
+        },
+        seller:{
+          type:mongoose.Schema.ObjectId,
+          ref:'User' 
         },
         quantity: {
           type: Number,
