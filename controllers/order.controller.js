@@ -15,7 +15,7 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
     productId,
 
     itemType,
-    quantity = 1,
+    quantity = quantity || 1,
     shipping_Address,
     billing_Address,
     price,
@@ -61,7 +61,7 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
   }
 
   // 4️ Calculate total order value (product price * quantity + delivery cost)
-  const totalPrice = price * quantity;
+  const totalPrice = price;
   const total_Order_Value = totalPrice + delivery_Cost;
 
   // 5️ Create a new order with cart structure
@@ -73,7 +73,7 @@ const createSingleOrder = asyncHandler(async (req, res, next) => {
       {
         itemType,
         item: productId,
-        seller:seller,
+        seller: seller,
         quantity,
       },
     ],
@@ -144,7 +144,7 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
   }
 
   // 4️ Calculate total order value (product price * quantity + delivery cost)
-  const totalPrice = price * quantity;
+  const totalPrice = price;
   const total_Order_Value = totalPrice + delivery_Cost;
 
   // 5️ Create a new order with cart structure
@@ -158,7 +158,7 @@ const createSingleOrderOnline = asyncHandler(async (req, res, next) => {
           itemType,
           item: productId,
           quantity,
-          seller:seller
+          seller: seller
         },
       ],
       shipping_Address,
@@ -445,10 +445,10 @@ const getOrdersByUser = async (req, res) => {
     const orderData = await orderModel
       .find({ user: userId })
       .populate('cart.item')
-      .sort({created_At:-1})
+      .sort({ created_At: -1 })
 
     if (!orderData || orderData.length === 0) {
-      return res.status(404).json({
+      return res.status(303).json({
         success: false,
         message: "No orders found"
       })
@@ -518,25 +518,27 @@ const getOrderBySeller = async (req, res) => {
   }
 };
 
- const getAllOrders = async (req, res) => {
+const getAllOrders = async (req, res) => {
   const user_Id = req.user._id;
 
   try {
-   
     const user = await userModel.findById(user_Id);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Check if the user is an admin
     if (user.user_Role !== "admin") {
       return res.status(403).json({ success: false, message: "User is not Admin" });
     }
 
-    // Fetch all orders
-    const response = await orderModel.find().sort({ created_At: -1 });
+    const response = await orderModel
+      .find()
+      .populate({
+        path: "cart.item",
+        select: "name product_Images",
+      })
+      .sort({ created_At: -1 });
 
-    // Return response based on whether orders exist
     if (response.length > 0) {
       return res.status(200).json({ success: true, message: "Orders Fetched", orders: response });
     } else {
@@ -547,6 +549,74 @@ const getOrderBySeller = async (req, res) => {
     return res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
+
+
+ const updateOrderStatus = async (req, res) => {
+  const adminId = req.user._id;
+  const {
+    orderId,
+    status,
+    payment_Id,
+    shipment_Time,
+    approx_Delivery_Time,
+    max_Delivery_Time,
+  } = req.body;
+
+  try {
+    // Validate admin
+    const user = await userModel.findById(adminId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.user_Role !== "admin") {
+      return res.status(403).json({ success: false, message: "Access denied: Not an admin" });
+    }
+
+    // Find order
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Update order fields
+    if (status) order.status = status;
+    if (payment_Id) order.payment_Id = payment_Id;
+    if (shipment_Time) order.shipment_Time = new Date(shipment_Time);
+    if (approx_Delivery_Time) order.approx_Delivery_Time = new Date(approx_Delivery_Time);
+    if (max_Delivery_Time) order.max_Delivery_Time = new Date(max_Delivery_Time);
+
+    // Auto-set timestamps and flags based on status
+    if (status === "Delivered") {
+      order.orders_Completed = true;
+      order.delivery_Time = new Date();
+    } else if (status === "Cancelled" || status === "Rejected") {
+      order.orders_Cancelled = true;
+      order.cancellation_Time = new Date();
+    } else if (status === "Confirmed") {
+      order.orders_Confirmed = true;
+      if (!shipment_Time) order.shipment_Time = new Date(); // fallback
+    }
+
+    // Save and respond
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order updated successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Error updating order:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
 
 
 export {
@@ -567,5 +637,6 @@ export {
   getCanceledOrderSeller,
   gettingItemsNeedingApproval,
   handleItems,
+  updateOrderStatus
 
 };

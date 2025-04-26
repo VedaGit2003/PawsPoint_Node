@@ -9,6 +9,11 @@ import {
   rejectAppointment,
   completeAppointment,
   getAllVets,
+  requestConsultation,
+  withdrawRequest,
+  getOnlineAppoinmentByUser,
+  getOnlineAppointmentByVet,
+  updateOnlineAppointmentByVet,
 } from "../controllers/appointment.controller.js";
 
 const router = Router();
@@ -31,5 +36,18 @@ router.route("/:appointmentId/approve").put(isLoggedIn, approveAppointment);
 router.route("/:appointmentId/reject").put(isLoggedIn, rejectAppointment);
 
 router.route("/:appointmentId/complete").put(isLoggedIn, completeAppointment);
+
+
+
+
+
+//online consultancy
+router.post('/request/:vetId',isLoggedIn, requestConsultation);
+router.delete('/request/:vetId',isLoggedIn, withdrawRequest);
+router.get('/accepted-appointments',isLoggedIn, getOnlineAppoinmentByUser);
+
+//by vet
+router.get('/get-all-appointment-vet',isLoggedIn,getOnlineAppointmentByVet)
+router.put('/update-appointment/:appointmentId',isLoggedIn,updateOnlineAppointmentByVet)
 
 export default router;

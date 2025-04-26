@@ -19,6 +19,7 @@ import {
   getOrdersByUser,
   getOrderBySeller,
   getAllOrders,
+  updateOrderStatus,
 } from "../controllers/order.controller.js";
 
 const router = Router();
@@ -63,5 +64,6 @@ router.route("/:orderId/handleItem/:itemId/user").put(isLoggedIn, handleItems);
 router.route('/u/getOrderDetails').post(isLoggedIn,getOrdersByUser)
 router.route('/s/getOrderDetails').post(isLoggedIn,getOrderBySeller)
 router.route('/a/getAllOrders').get(isLoggedIn,getAllOrders)
+router.route('/admin/updateOrder').put(isLoggedIn,updateOrderStatus)
 
 export default router;
