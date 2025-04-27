@@ -1,4 +1,5 @@
 import appointmentModel from "../models/appointment.models.js";
+import consultancyModel from "../models/vet.consultancy.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -557,6 +558,199 @@ const completeAppointment = asyncHandler(async (req, res) => {
     );
 });
 
+//====================//online consultancy //===================//
+
+
+
+// @desc    Create consultation request
+// @route   POST /api/v1/consultancy/request/:vetId
+// @access  Private
+const requestConsultation = async (req, res) => {
+  try {
+    const vetId = req.params.vetId;
+    const customerId = req.user._id;
+
+    // Check if vet exists
+    const vet = await userModel.findById(vetId);
+    if (!vet || vet.user_Role !== 'vet') {
+      return res.status(404).json({
+        success: false,
+        message: 'Vet not found'
+      });
+    }
+
+    // Check for existing request
+    const existingRequest = await consultancyModel.findOne({
+      vet_info: vetId,
+      customer_info: customerId,
+      request_from_customer: true
+    });
+
+    if (existingRequest) {
+    return  res.status(202).json({
+        success: true,
+        message: 'Request already exists for this vet'
+      });
+    }
+
+    // Create new consultation request
+    const newConsultancy = await consultancyModel.create({
+      vet_info: vetId,
+      customer_info: customerId,
+      request_from_customer: true,
+      payment_status: 'pending'
+    });
+
+    res.status(201).json({
+      success: true,
+      data: newConsultancy
+    });
+  } catch (error) {
+    console.error('Error creating request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating request'
+    });
+  }
+};
+
+// @desc    Withdraw consultation request
+// @route   DELETE /api/v1/consultancy/request/:vetId
+// @access  Private
+const withdrawRequest = async (req, res) => {
+  try {
+    const vetId = req.params.vetId;
+    const customerId = req.user._id;
+
+    // Find and delete the request
+    const deletedRequest = await consultancyModel.findOneAndDelete({
+      vet_info: vetId,
+      customer_info: customerId,
+      request_from_customer: true
+    });
+
+    if (!deletedRequest) {
+      return res.status(202).json({
+        success: true,
+        message: 'No active request found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Request withdrawn successfully'
+    });
+  } catch (error) {
+    console.error('Error withdrawing request:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while withdrawing request'
+    });
+  }
+};
+
+
+const getOnlineAppoinmentByUser = async (req, res) => {
+  try {
+    const appointments = await consultancyModel.find({
+      customer_info: req.user._id,
+      request_from_customer: true,
+      accept_by_vet: true
+    })
+    .populate({
+      path: 'vet_info',
+      select: '-password -__v -createdAt -updatedAt' // Exclude sensitive fields
+    })
+    .select('-__v') // Exclude version key from main document
+    .sort({ created_At: -1 }); // Newest first
+
+    res.status(200).json({
+      success: true,
+      count: appointments.length,
+      data: appointments,
+      message:"Appointment fetched"
+    });
+
+  } catch (error) {
+    console.error('Error fetching accepted appointments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching appointments',
+      error
+    });
+  }
+};
+
+
+const getOnlineAppointmentByVet=async(req,res)=>{
+  try{
+const appointments = await consultancyModel.find({
+      vet_info: req.user._id,
+      request_from_customer: true,
+    })
+    .populate(
+      {
+      path: 'customer_info',
+      select: 'user_Name profile_Image'
+      }
+    )
+    .sort({ created_At: -1 }); // Newest first
+
+    res.status(200).json({
+      success: true,
+      count: appointments.length,
+      data: appointments,
+      message:"Appointment Fetched"
+    });
+  }catch(error){
+    console.error('Error fetching accepted appointments:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching appointments',
+      error
+    });
+  }
+}
+
+const updateOnlineAppointmentByVet = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const { accept_by_vet, scheduled_date, scheduled_time } = req.body;
+
+    const appointment = await consultancyModel.findOne({
+      _id: appointmentId,
+      vet_info: req.user._id, // Optional: ensures the vet owns this appointment
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found or unauthorized",
+      });
+    }
+
+    // Update fields if provided
+    if (accept_by_vet !== undefined) appointment.accept_by_vet = accept_by_vet;
+    if (scheduled_date) appointment.scheduled_date = scheduled_date;
+    if (scheduled_time) appointment.scheduled_time = scheduled_time;
+
+    await appointment.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Appointment updated successfully",
+      data: appointment,
+    });
+  } catch (error) {
+    console.error("Error updating appointment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating appointment",
+      error,
+    });
+  }
+};
+
 export {
   getAllVets,
   createAppointment,
@@ -566,4 +760,11 @@ export {
   approveAppointment,
   rejectAppointment,
   completeAppointment,
+
+  //online  consultation
+  requestConsultation,
+  withdrawRequest,
+  getOnlineAppoinmentByUser,
+  getOnlineAppointmentByVet,
+  updateOnlineAppointmentByVet
 };

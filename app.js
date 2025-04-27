@@ -13,6 +13,7 @@ import orderRouter from "./routes/order.routes.js";
 import appointmentRouter from "./routes/appointment.routes.js";
 import categoryRouter from "./routes/category.routes.js"
 import paymentRouter from "./routes/payment.routes.js"
+import cartRouter from "./routes/cart.routes.js"
 
 connectDB();
 
@@ -36,6 +37,7 @@ app.use("/api/v1/category",categoryRouter)
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/pets", petRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/appointments", appointmentRouter);
 app.use("/api/v1/payments", paymentRouter);
 
