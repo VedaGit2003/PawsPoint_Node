@@ -68,4 +68,16 @@ const validateVets = (vets, req, res) => {
   }
 };
 
-export { validateFields, validateEmails, validateRoles, validateSellers, validateVets };
+const validateAdmin = (admins, req, res) => {
+  if(admins.user_Role !== "admin") {
+    return res.json(
+      new ApiError(
+        400,
+        "Seller does not exist",
+        "NotFoundError:Admin does not exist"
+      )
+    );
+  }
+};
+
+export { validateFields, validateEmails, validateRoles, validateSellers, validateVets,validateAdmin };

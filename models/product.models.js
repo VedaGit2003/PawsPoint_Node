@@ -33,6 +33,9 @@ const porductSchema = new mongoose.Schema(
       required: [true, "Please provide the category of your product"],
     }
     ,
+    petCategory: {
+      type: [String],
+    },
     product_Images: {
       type: [String],
       required: [true, "Please provide the images of your product"],

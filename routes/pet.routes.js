@@ -8,6 +8,10 @@ import {
   deletePet,
   searchPets,
   getPetsBySellerId,
+  createPetOrder,
+  getUserOrders,
+  getAllPetOrders,
+  getUserMobileOrders,
 } from "../controllers/pet.controller.js";
 
 const router = Router();
@@ -24,6 +28,12 @@ router
 
 // search pets by keywords
 router.route("/search").get(searchPets);
+
+router.route("/order").post(isLoggedIn,createPetOrder);
+router.route("/getUserOrders").get(isLoggedIn,getUserOrders);
+router.route("/getAllPetOrders").get(isLoggedIn,getAllPetOrders);
+router.route("/getUserOrdersMobile").post(isLoggedIn,getUserMobileOrders);
+
 
 // search pets by seller id
 router.route("/seller/:sellerId").get(getPetsBySellerId);

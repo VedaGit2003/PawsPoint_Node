@@ -10,7 +10,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
   let { page = 1, category, price, brand, sort } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 20; // Limit products per range
+  const limitNum = 4; // Limit products per range
 
   const queryObject = {};
   // Applying filter
@@ -97,7 +97,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
 });
 
 const createProducts = asyncHandler(async (req, res) => {
-  let { name, brand, price, description, category, product_Images } = req.body;
+  let { name, brand, price, description, category,petCategory, product_Images } = req.body;
   validateFields(
     [name, price, brand, description, category, product_Images],
     req,
@@ -118,6 +118,7 @@ const createProducts = asyncHandler(async (req, res) => {
     price,
     description,
     category,
+    petCategory,
     product_Images,
     seller_Info: verifySeller,
   });
