@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import userModel from "../models/user.models.js";
+import OfflineAppointment from "../models/offlineAppointment.model.js";
 import { validateVets, validateFields } from "../utils/validateData.js";
 
 
@@ -751,6 +752,146 @@ const updateOnlineAppointmentByVet = async (req, res) => {
   }
 };
 
+
+// =====================Offline appointment==============
+const createOfflineAppointment = asyncHandler(async (req, res) => {
+  const { userId, startDate, endDate, pincode } = req.body;
+
+  // Validate required fields
+  if (!userId || !startDate || !endDate || !pincode) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "All fields are required: userId, start_Date, end_Date, pincode"));
+  }
+
+  // Validate user existence
+  const user = await userModel.findById(userId);
+  if (!user) {
+    return res.status(404).json(new ApiError(404, "User not found", "UserNotFound"));
+  }
+
+  // Create offline appointment
+  const newOfflineAppointment = await OfflineAppointment.create({
+    userId: userId,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
+    pincode
+  });
+
+  if (!newOfflineAppointment) {
+    return res
+      .status(500)
+      .json(new ApiError(500, "Failed to create offline appointment", "ServerError"));
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, newOfflineAppointment, "Offline appointment created successfully"));
+});
+
+const getMyOfflineAppointments = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+
+  // Validate input
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, "User ID is required"));
+  }
+
+  // Check if user exists
+  const user = await userModel.findById(userId);
+  if (!user) {
+    return res
+      .status(404)
+      .json(new ApiError(404, "User not found"));
+  }
+
+  // Fetch all offline appointments for the user
+  const appointments = await OfflineAppointment.find({ userId });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, appointments, "Offline appointments retrieved successfully"));
+});
+
+
+const updateOfflineAppointment = asyncHandler(async (req, res) => {
+  try {
+    const user_Id = req.user._id; // From auth middleware
+    const user = await userModel.findById(user_Id);
+    const { appointmentId } = req.params;
+    const { finalDate, location } = req.body;
+
+    // Check if user is admin
+    if (!user || user.user_Role !== "admin") {
+      return res.status(403).json({ success: false, message: "User is not Admin" });
+    }
+
+    // Validate input
+    if (!finalDate || !location) {
+      return res.status(400).json(
+        new ApiError(400, "Final date and location are required", "ValidationError")
+      );
+    }
+
+    // Update and return appointment
+    const updatedAppointment = await OfflineAppointment.findByIdAndUpdate(
+      appointmentId,
+      {
+        finalDate: new Date(finalDate),
+        location,
+        confirmation: true,
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAppointment) {
+      return res.status(404).json(
+        new ApiError(404, "Offline appointment not found", "NotFoundError")
+      );
+    }
+
+    res.status(200).json(
+      new ApiResponse(200, updatedAppointment, "Offline appointment updated and confirmed successfully")
+    );
+  } catch (error) {
+    console.error("Error updating offline appointment:", error);
+    res.status(500).json(new ApiError(500, "Internal Server Error", "ServerError"));
+  }
+});
+
+
+
+const getAllAppointments = asyncHandler(async (req, res) => {
+  try {
+    const user_Id = req.user._id; // From auth middleware
+    const user = await userModel.findById(user_Id);
+
+    if (!user || user.user_Role !== "admin") {
+      return res.status(403).json({ success: false, message: "User is not Admin" });
+    }
+
+    // Fetch all offline appointments from the database
+    const appointments = await OfflineAppointment.find().sort({ final_Date: 1 });
+
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json(new ApiError(404, "No appointments found", "NotFoundError"));
+    }
+
+    // Return the list of appointments
+    res.status(200).json(new ApiResponse(200, appointments, "Appointments fetched successfully"));
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json(new ApiError(500, "Internal Server Error", "ServerError"));
+  }
+});
+
+
+
+
+
+
 export {
   getAllVets,
   createAppointment,
@@ -766,5 +907,11 @@ export {
   withdrawRequest,
   getOnlineAppoinmentByUser,
   getOnlineAppointmentByVet,
-  updateOnlineAppointmentByVet
+  updateOnlineAppointmentByVet,
+  //offline consultation
+  createOfflineAppointment,
+  getMyOfflineAppointments,
+  getAllAppointments,
+  updateOfflineAppointment
+
 };
