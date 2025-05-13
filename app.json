@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "c3a644f2-f2ba-445f-8c6d-5e794dfe1b85"
+      }
+    },
+    "owner": "veda6",
+    "android": {
+      "package": "com.veda6.project10"
+    }
+  }
+}

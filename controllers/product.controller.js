@@ -10,7 +10,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
   let { page = 1, category, price, brand, sort } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 4; // Limit products per range
+  const limitNum = 6; // Limit products per range
 
   const queryObject = {};
   // Applying filter
@@ -233,7 +233,7 @@ const searchProduct = asyncHandler(async (req, res) => {
   let { page = 1, category, price, brand, sort, search } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 5; // Limit products per range
+  const limitNum = 100; // Limit products per range
 
   const queryObject = {};
   // Applying filter
@@ -337,7 +337,7 @@ const getProductsBySellerId = asyncHandler(async (req, res) => {
   else return res.json(new ApiError(400, "Invalid user id"));
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 5; // Limit products per range
+  const limitNum = 100; // Limit products per range
 
   const queryObject = {};
   // Applying filter

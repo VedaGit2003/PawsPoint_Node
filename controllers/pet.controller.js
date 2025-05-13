@@ -13,7 +13,7 @@ const getAllPets = asyncHandler(async (req, res) => {
   let { page = 1, pet_Type, breed_Name, pet_Age, price, sort } = req.query;
 
   const pageNum = parseInt(page, 10) || 1;
-  const limitNum = 5;
+  const limitNum = 100;
 
   const queryObject = {};
 
